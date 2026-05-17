@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Pencil, Trash2 } from 'lucide-react';
+import { Search, X, Pencil, Trash2, ChevronLeft, Download } from 'lucide-react';
+import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,7 @@ const OPTIONAL_COLS = [
 ] as const;
 
 type OptColKey = typeof OPTIONAL_COLS[number]['key'];
+const ALL_COL_KEYS: OptColKey[] = OPTIONAL_COLS.map(c => c.key);
 
 export default function BeansQueryPage() {
   const navigate = useNavigate();
@@ -76,6 +78,11 @@ export default function BeansQueryPage() {
     });
   };
 
+  const isAllCols = ALL_COL_KEYS.every(k => visibleCols.has(k));
+  const toggleAllCols = () => {
+    setVisibleCols(isAllCols ? new Set() : new Set(ALL_COL_KEYS));
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -95,75 +102,144 @@ export default function BeansQueryPage() {
     load();
   };
 
+  // CSV 匯出（依目前篩選結果 + 顯示中的欄位）
+  const exportCSV = () => {
+    if (filtered.length === 0) {
+      showToast('沒有可匯出的資料', 'error');
+      return;
+    }
+    const header = ['名稱', '狀態'];
+    if (visibleCols.has('origins')) header.push('產地');
+    if (visibleCols.has('process')) header.push('處理法');
+    if (visibleCols.has('processing_plant')) header.push('處理廠');
+    if (visibleCols.has('flavors')) header.push('參考風味');
+    if (visibleCols.has('price_drip')) header.push('掛耳價');
+    if (visibleCols.has('price_half_pound')) header.push('半磅價');
+    if (visibleCols.has('price_pour_over')) header.push('手沖價');
+    if (visibleCols.has('price_syphon')) header.push('虹吸價');
+
+    const rows = filtered.map(b => {
+      const row: (string | number)[] = [b.name, STATUS_LABEL[b.status]];
+      if (visibleCols.has('origins')) row.push(b.origins.map(o => `${o.country}${o.region ? ' ' + o.region : ''}`).join('、'));
+      if (visibleCols.has('process')) row.push(b.process_detail || PROCESS_LABEL[b.process_category]);
+      if (visibleCols.has('processing_plant')) row.push(b.processing_plant || '');
+      if (visibleCols.has('flavors')) row.push((b.flavors as string[]).join('、'));
+      if (visibleCols.has('price_drip')) row.push(b.price_drip);
+      if (visibleCols.has('price_half_pound')) row.push(b.price_half_pound);
+      if (visibleCols.has('price_pour_over')) row.push(b.price_pour_over);
+      if (visibleCols.has('price_syphon')) row.push(b.price_syphon);
+      return row;
+    });
+
+    const csv = [header, ...rows]
+      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\r\n');
+    const bom = '﻿';
+    const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `HAMONDE_豆子品項_${format(new Date(), 'yyyyMMdd_HHmmss')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-4">
+        <button onClick={() => navigate(-1)} className="text-cafe-muted hover:text-cafe-dark p-1">
+          <ChevronLeft className="h-7 w-7" />
+        </button>
         <h1 className="text-xl font-semibold text-cafe-dark">查詢豆子品項</h1>
-        <Button size="sm" onClick={() => navigate('/beans/new')}>+ 新增</Button>
+        <div className="ml-auto flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={exportCSV} className="gap-1.5">
+            <Download className="h-4 w-4" />
+            匯出 CSV
+          </Button>
+          <Button size="sm" onClick={() => navigate('/beans/new')}>+ 新增</Button>
+        </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-cafe-cream rounded-xl border border-cafe-border p-4 mb-4 flex flex-wrap gap-3 items-start">
-        {/* Status */}
-        <div className="flex gap-1.5 flex-wrap">
-          {([['all', '全部'], ['selling', '販售中'], ['sold_out', '售完']] as [string, string][]).map(([v, l]) => (
-            <button
-              key={v}
-              onClick={() => setStatusFilter(v as 'all' | BeanStatus)}
-              className={`px-3 py-1.5 rounded-lg text-sm min-h-[36px] transition-colors ${statusFilter === v ? 'bg-cafe-primary text-cafe-cream' : 'bg-cafe-bg/50 text-cafe-dark hover:bg-cafe-border'}`}
-            >
-              {l}
-            </button>
-          ))}
+      <div className="bg-cafe-cream rounded-xl border border-cafe-border p-4 mb-4 flex flex-col gap-4">
+        {/* 銷售狀態篩選 */}
+        <div>
+          <div className="text-xs text-cafe-muted mb-1.5">銷售狀態</div>
+          <div className="flex gap-1.5 flex-wrap">
+            {([['all', '全部'], ['selling', '販售中'], ['sold_out', '售完']] as [string, string][]).map(([v, l]) => (
+              <button
+                key={v}
+                onClick={() => setStatusFilter(v as 'all' | BeanStatus)}
+                className={`px-3 py-1.5 rounded-lg text-sm min-h-[36px] transition-colors ${statusFilter === v ? 'bg-cafe-primary text-cafe-cream' : 'bg-cafe-bg/50 text-cafe-dark hover:bg-cafe-border'}`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Process */}
-        <div className="flex gap-1.5 flex-wrap">
-          {([['all', '全部處理法'], ['sun_dried', '日曬'], ['washed', '水洗'], ['honey', '蜜處理'], ['special', '特殊處理']] as [string, string][]).map(([v, l]) => (
-            <button
-              key={v}
-              onClick={() => setProcessFilter(v as 'all' | ProcessCategory)}
-              className={`px-3 py-1.5 rounded-lg text-sm min-h-[36px] transition-colors ${processFilter === v ? 'bg-cafe-primary text-cafe-cream' : 'bg-cafe-bg/50 text-cafe-dark hover:bg-cafe-border'}`}
-            >
-              {l}
-            </button>
-          ))}
+        {/* 處理法篩選 */}
+        <div>
+          <div className="text-xs text-cafe-muted mb-1.5">處理法</div>
+          <div className="flex gap-1.5 flex-wrap">
+            {([['all', '全部'], ['sun_dried', '日曬'], ['washed', '水洗'], ['honey', '蜜處理'], ['special', '特殊處理']] as [string, string][]).map(([v, l]) => (
+              <button
+                key={v}
+                onClick={() => setProcessFilter(v as 'all' | ProcessCategory)}
+                className={`px-3 py-1.5 rounded-lg text-sm min-h-[36px] transition-colors ${processFilter === v ? 'bg-cafe-primary text-cafe-cream' : 'bg-cafe-bg/50 text-cafe-dark hover:bg-cafe-border'}`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Column toggles */}
-        <div className="flex flex-wrap gap-1.5">
-          {OPTIONAL_COLS.map(({ key, label }) => (
+        {/* 顯示欄位 */}
+        <div>
+          <div className="text-xs text-cafe-muted mb-1.5">顯示欄位（可多選）</div>
+          <div className="flex flex-wrap gap-1.5">
             <button
-              key={key}
-              onClick={() => toggleCol(key)}
-              className={`px-3 py-1.5 rounded-lg text-xs min-h-[36px] transition-colors border ${visibleCols.has(key) ? 'border-cafe-primary text-cafe-primary' : 'border-cafe-border text-cafe-muted'}`}
+              onClick={toggleAllCols}
+              className={`px-3 py-1.5 rounded-lg text-sm min-h-[36px] transition-colors border ${isAllCols ? 'bg-cafe-primary border-cafe-primary text-cafe-cream' : 'border-cafe-border text-cafe-muted hover:bg-cafe-border/30'}`}
             >
-              {label}
+              全部
             </button>
-          ))}
+            {OPTIONAL_COLS.map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => toggleCol(key)}
+                className={`px-3 py-1.5 rounded-lg text-sm min-h-[36px] transition-colors border ${visibleCols.has(key) ? 'border-cafe-primary text-cafe-primary' : 'border-cafe-border text-cafe-muted hover:bg-cafe-border/30'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Search */}
-        <div className="flex items-center gap-2">
-          <button onClick={() => setSearchOpen(v => !v)} className="p-2 text-cafe-muted hover:text-cafe-dark">
-            <Search className="h-5 w-5" />
-          </button>
-          {searchOpen && (
-            <div className="relative">
-              <Input
-                placeholder="搜尋豆名"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-40"
-                autoFocus
-              />
-              {search && (
-                <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-cafe-muted">
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          )}
+        {/* 搜尋 */}
+        <div>
+          <div className="text-xs text-cafe-muted mb-1.5">搜尋豆名</div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setSearchOpen(v => !v)} className="p-2 text-cafe-muted hover:text-cafe-dark border border-cafe-border rounded-lg">
+              <Search className="h-5 w-5" />
+            </button>
+            {searchOpen && (
+              <div className="relative flex-1 max-w-xs">
+                <Input
+                  placeholder="輸入豆名關鍵字"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  autoFocus
+                />
+                {search && (
+                  <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-cafe-muted">
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -218,8 +294,7 @@ export default function BeansQueryPage() {
                         {(bean.flavors as string[]).map(f => (
                           <span
                             key={f}
-                            className="inline-block px-2 py-0.5 rounded-md border border-cafe-border bg-cafe-cream text-cafe-dark"
-                            style={{ fontSize: '12px' }}
+                            className="inline-block px-2 py-0.5 rounded-md border border-cafe-border bg-cafe-cream text-cafe-dark text-xs"
                           >
                             {f}
                           </span>

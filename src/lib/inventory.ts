@@ -33,10 +33,23 @@ export function calcFreshnessStats(
     for (const batch of getAllActiveBatches(transactions, beanId)) {
       const days = differenceInDays(new Date(), parseISO(batch.roastDate));
       if (days <= 10) resting++;
-      else if (days > 120) expired++;
+      else if (days > 90) expired++;
     }
   }
   return { resting, expired };
+}
+
+/** 計算低庫存豆子種數（總數 ≤ 2 且 > 0 的豆子） */
+export function calcLowStockCount(
+  transactions: InventoryTransaction[],
+  beanIds: string[]
+): number {
+  let count = 0;
+  for (const beanId of beanIds) {
+    const total = getAllActiveBatches(transactions, beanId).reduce((s, b) => s + b.quantity, 0);
+    if (total > 0 && total <= 2) count++;
+  }
+  return count;
 }
 
 export function calculateBatchInventory(

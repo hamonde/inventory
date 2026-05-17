@@ -14,13 +14,14 @@ const PROCESS_LABEL: Record<ProcessCategory, string> = {
 };
 
 type SortMode = 'name' | 'total_asc';
-type FreshFilter = 'all' | 'resting' | 'normal' | 'expired';
+type FreshFilter = 'all' | 'resting' | 'normal' | 'expired' | 'low_stock';
 
 const FRESH_TABS: { key: FreshFilter; label: string }[] = [
   { key: 'all', label: '全部' },
   { key: 'resting', label: '養豆中' },
   { key: 'normal', label: '正常' },
-  { key: 'expired', label: '過期警示' },
+  { key: 'expired', label: '滿三個月' },
+  { key: 'low_stock', label: '低庫存' },
 ];
 
 interface BatchBadgeProps {
@@ -35,8 +36,8 @@ function BatchBadge({ roastDate }: BatchBadgeProps) {
       </span>
     );
   }
-  if (days > 120) {
-    const overDays = days - 120;
+  if (days > 90) {
+    const overDays = days - 90;
     const months = Math.floor(overDays / 30);
     const remainDays = overDays % 30;
     const overText = months > 0
@@ -44,7 +45,7 @@ function BatchBadge({ roastDate }: BatchBadgeProps) {
       : `${remainDays} 天`;
     return (
       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-cafe-primary text-cafe-cream">
-        已過期 {overText}
+        滿三個月 已過 {overText}
       </span>
     );
   }
@@ -56,12 +57,12 @@ function filterBatchesByFreshness(
   batches: { roastDate: string; quantity: number }[],
   filter: FreshFilter
 ): { roastDate: string; quantity: number }[] {
-  if (filter === 'all') return batches;
+  if (filter === 'all' || filter === 'low_stock') return batches;
   return batches.filter(b => {
     const days = differenceInDays(new Date(), parseISO(b.roastDate));
     if (filter === 'resting') return days <= 10;
-    if (filter === 'expired') return days > 120;
-    if (filter === 'normal') return days > 10 && days <= 120;
+    if (filter === 'expired') return days > 90;
+    if (filter === 'normal') return days > 10 && days <= 90;
     return true;
   });
 }
@@ -83,7 +84,7 @@ export default function InventoryQueryPage() {
 
   // 從 URL param 讀取初始篩選值（從首頁警示卡片點進來時）
   const urlFilter = searchParams.get('filter') as FreshFilter | null;
-  const validFilters: FreshFilter[] = ['all', 'resting', 'normal', 'expired'];
+  const validFilters: FreshFilter[] = ['all', 'resting', 'normal', 'expired', 'low_stock'];
   const initialFilter: FreshFilter =
     urlFilter && validFilters.includes(urlFilter) ? urlFilter : 'all';
 
@@ -116,7 +117,12 @@ export default function InventoryQueryPage() {
     bean: b,
     storage: calcFilteredWarehouseTotal(allTx, b.id, 'storage', freshFilter),
     display: calcFilteredWarehouseTotal(allTx, b.id, 'display', freshFilter),
-  })).filter(r => r.storage > 0 || r.display > 0);
+  })).filter(r => {
+    const has = r.storage > 0 || r.display > 0;
+    if (!has) return false;
+    if (freshFilter === 'low_stock') return (r.storage + r.display) <= 2;
+    return true;
+  });
 
   const sorted = [...filtered].sort((a, b) => {
     if (sortMode === 'name') return a.bean.name.localeCompare(b.bean.name, 'zh-TW');
@@ -132,8 +138,8 @@ export default function InventoryQueryPage() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => navigate(-1)} className="text-cafe-muted hover:text-cafe-dark">
-          <ChevronLeft className="h-5 w-5" />
+        <button onClick={() => navigate(-1)} className="text-cafe-muted hover:text-cafe-dark p-1">
+          <ChevronLeft className="h-7 w-7" />
         </button>
         <h1 className="text-xl font-semibold text-cafe-dark">查詢豆子庫存</h1>
         <div className="ml-auto flex gap-2">
@@ -189,7 +195,8 @@ export default function InventoryQueryPage() {
             <tbody>
               {sorted.map(({ bean, storage, display }, i) => {
                 const total = storage + display;
-                const isLow = total < 2;
+                const isLow = total <= 2;
+                const lowStyle = isLow ? { color: '#E7452A' } : undefined;
                 return (
                   <tr key={bean.id} className={`border-b border-cafe-border/50 ${i % 2 === 1 ? 'bg-cafe-bg/10' : ''}`}>
                     <td className="px-4 py-3">
@@ -203,7 +210,8 @@ export default function InventoryQueryPage() {
                     <td className="px-4 py-3 text-center">
                       {storage > 0 ? (
                         <button
-                          className={`font-medium hover:underline ${isLow ? 'text-cafe-primary font-bold' : 'text-cafe-dark'}`}
+                          className={`hover:underline ${isLow ? 'font-bold text-lg' : 'font-medium text-cafe-dark'}`}
+                          style={lowStyle}
                           onClick={() => openBatchDetail(bean, 'storage')}
                         >
                           {storage}
@@ -213,14 +221,18 @@ export default function InventoryQueryPage() {
                     <td className="px-4 py-3 text-center">
                       {display > 0 ? (
                         <button
-                          className={`font-medium hover:underline ${isLow ? 'text-cafe-primary font-bold' : 'text-cafe-dark'}`}
+                          className={`hover:underline ${isLow ? 'font-bold text-lg' : 'font-medium text-cafe-dark'}`}
+                          style={lowStyle}
                           onClick={() => openBatchDetail(bean, 'display')}
                         >
                           {display}
                         </button>
                       ) : <span className="text-cafe-muted">—</span>}
                     </td>
-                    <td className={`px-4 py-3 text-center font-semibold ${isLow ? 'text-cafe-primary' : 'text-cafe-dark'}`}>
+                    <td
+                      className={`px-4 py-3 text-center ${isLow ? 'font-bold text-lg' : 'font-semibold text-cafe-dark'}`}
+                      style={lowStyle}
+                    >
                       {total}
                     </td>
                   </tr>

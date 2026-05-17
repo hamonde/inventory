@@ -22,9 +22,9 @@ function FreshBadge({ roastDate }: { roastDate: string }) {
       養豆中
     </span>
   );
-  if (days > 120) return (
+  if (days > 90) return (
     <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-cafe-primary text-cafe-cream">
-      過期警示
+      滿三個月
     </span>
   );
   return (
@@ -193,7 +193,7 @@ export default function InventoryCheckPage() {
           onClick={() => step === 'count' ? setCancelConfirmOpen(true) : navigate(-1)}
           className="text-cafe-muted hover:text-cafe-dark"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-7 w-7" />
         </button>
         <h1 className="text-xl font-semibold text-cafe-dark">盤點</h1>
         {step === 'count' && (

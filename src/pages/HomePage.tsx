@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ArrowLeftRight, List, PlusCircle, AlertTriangle, Clock, CircleCheck, History, Coins, PackageOpen, BarChart2, ClipboardList } from 'lucide-react';
+import { Search, ArrowLeftRight, List, PlusCircle, AlertTriangle, Clock, CircleCheck, History, Coins, PackageOpen, BarChart2, ClipboardList, PackageX } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { calcFreshnessStats } from '@/lib/inventory';
+import { calcFreshnessStats, calcLowStockCount } from '@/lib/inventory';
 import QuickSellDialog from '@/components/QuickSellDialog';
 import QuickShelfDialog from '@/components/QuickShelfDialog';
 import type { InventoryTransaction, Bean } from '@/types';
@@ -38,6 +38,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [resting, setResting] = useState(0);
   const [expired, setExpired] = useState(0);
+  const [lowStock, setLowStock] = useState(0);
   const [alertLoading, setAlertLoading] = useState(true);
   const [quickSellOpen, setQuickSellOpen] = useState(false);
   const [quickShelfOpen, setQuickShelfOpen] = useState(false);
@@ -49,9 +50,11 @@ export default function HomePage() {
     ]).then(([{ data: beans }, { data: txs }]) => {
       if (beans && txs) {
         const beanIds = (beans as Pick<Bean, 'id'>[]).map(b => b.id);
-        const stats = calcFreshnessStats(txs as InventoryTransaction[], beanIds);
+        const txList = txs as InventoryTransaction[];
+        const stats = calcFreshnessStats(txList, beanIds);
         setResting(stats.resting);
         setExpired(stats.expired);
+        setLowStock(calcLowStockCount(txList, beanIds));
       }
       setAlertLoading(false);
     });
@@ -61,7 +64,7 @@ export default function HomePage() {
     loadFreshness();
   }, []);
 
-  const allGood = !alertLoading && resting === 0 && expired === 0;
+  const allGood = !alertLoading && resting === 0 && expired === 0 && lowStock === 0;
 
   return (
     <div>
@@ -76,7 +79,7 @@ export default function HomePage() {
               <span className="text-sm font-medium text-green-800">所有豆子狀態正常</span>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {/* Expired card */}
               <button
                 onClick={() => navigate('/inventory?filter=expired')}
@@ -86,7 +89,7 @@ export default function HomePage() {
                 <AlertTriangle className="h-6 w-6 shrink-0" style={{ color: '#AC6342' }} />
                 <div>
                   <div className="text-2xl font-bold" style={{ color: '#AC6342' }}>{expired}</div>
-                  <div className="text-xs text-cafe-dark mt-0.5">批已過期豆子</div>
+                  <div className="text-xs text-cafe-dark mt-0.5">批已滿三個月</div>
                 </div>
               </button>
 
@@ -100,6 +103,19 @@ export default function HomePage() {
                 <div>
                   <div className="text-2xl font-bold text-cafe-dark">{resting}</div>
                   <div className="text-xs text-cafe-dark mt-0.5">批正在養豆</div>
+                </div>
+              </button>
+
+              {/* Low stock card */}
+              <button
+                onClick={() => navigate('/inventory?filter=low_stock')}
+                className="flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-opacity hover:opacity-80"
+                style={{ background: '#FDE7E1', borderColor: '#E7452A' }}
+              >
+                <PackageX className="h-6 w-6 shrink-0" style={{ color: '#E7452A' }} />
+                <div>
+                  <div className="text-2xl font-bold" style={{ color: '#E7452A' }}>{lowStock}</div>
+                  <div className="text-xs text-cafe-dark mt-0.5">種庫存不足</div>
                 </div>
               </button>
             </div>

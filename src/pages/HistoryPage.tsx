@@ -188,7 +188,7 @@ export default function HistoryPage() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-5">
         <button onClick={() => navigate(-1)} className="text-cafe-muted hover:text-cafe-dark">
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-7 w-7" />
         </button>
         <h1 className="text-xl font-semibold text-cafe-dark">歷史紀錄</h1>
       </div>

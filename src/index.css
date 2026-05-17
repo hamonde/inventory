@@ -14,6 +14,11 @@
   box-sizing: border-box;
 }
 
+/* 全域字體放大 1.25 倍：把 root font-size 從 16px 改成 20px，所有 rem-based 樣式會自動同比例放大 */
+html {
+  font-size: 20px;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background-color: #ACB6BF;
