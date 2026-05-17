@@ -131,8 +131,11 @@ export default function OriginPickerDialog({
       .single();
     setAddingCountrySaving(false);
     if (error || !data) {
-      setValidationError('新增國家失敗，請再試一次');
-      setTimeout(() => setValidationError(''), 3000);
+      const msg = error?.message
+        ? `新增國家失敗：${error.message}`
+        : '新增國家失敗，請再試一次';
+      setValidationError(msg);
+      setTimeout(() => setValidationError(''), 5000);
       return;
     }
     setCountries(prev => [...prev, data as Country]);
