@@ -17,25 +17,13 @@ const SOURCE_SVG = resolve(PUBLIC, 'app-icon.svg');
 async function buildIcon(size, outPath) {
   // 若使用者有放 PNG 原圖就以它為主，沒有則用 SVG
   const src = existsSync(SOURCE_PNG) ? SOURCE_PNG : SOURCE_SVG;
-  let pipeline = sharp(src).trim({ threshold: 18 });
 
-  // 內距：總尺寸的 4% 留白，外觀更穩定（避免 trim 後角色貼到邊框）
-  const padPct = 0.04;
-  const inner = Math.round(size * (1 - padPct * 2));
+  // 不做 trim、不加內距，直接縮放到目標尺寸
+  const buf = await sharp(src)
+    .resize(size, size, { fit: 'contain', background: { r: 251, g: 248, b: 242, alpha: 1 } })
+    .png()
+    .toBuffer();
 
-  pipeline = pipeline
-    .resize(inner, inner, { fit: 'contain', background: { r: 251, g: 248, b: 242, alpha: 1 } })
-    .extend({
-      top: size - inner === 0 ? 0 : Math.round((size - inner) / 2),
-      bottom: size - inner === 0 ? 0 : Math.round((size - inner) / 2),
-      left: size - inner === 0 ? 0 : Math.round((size - inner) / 2),
-      right: size - inner === 0 ? 0 : Math.round((size - inner) / 2),
-      background: { r: 251, g: 248, b: 242, alpha: 1 },
-    })
-    .resize(size, size, { fit: 'cover' })
-    .png();
-
-  const buf = await pipeline.toBuffer();
   writeFileSync(outPath, buf);
   console.log(`Generated ${outPath}`);
 }
