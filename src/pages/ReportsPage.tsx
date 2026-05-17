@@ -298,7 +298,7 @@ export default function ReportsPage() {
                 <div>
                   <div className="text-xs text-cafe-muted mb-0.5">產地</div>
                   <div className="text-cafe-dark">
-                    {detailBean.origins.map(o => `${o.country}${o.region ? ` ${o.region}` : ''}`).join('、')}
+                    {detailBean.origins.map(o => `${o.country}${o.region ? ` ${o.region}` : ''}${o.estate ? ` ${o.estate}` : ''}`).join('、')}
                   </div>
                 </div>
                 <div>

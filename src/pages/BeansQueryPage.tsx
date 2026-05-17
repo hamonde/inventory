@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, X, Pencil, Trash2, ChevronLeft, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
+import { formatOrigins } from '@/lib/origin';
 import { useToast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -120,7 +121,7 @@ export default function BeansQueryPage() {
 
     const rows = filtered.map(b => {
       const row: (string | number)[] = [b.name, STATUS_LABEL[b.status]];
-      if (visibleCols.has('origins')) row.push(b.origins.map(o => `${o.country}${o.region ? ' ' + o.region : ''}`).join('、'));
+      if (visibleCols.has('origins')) row.push(formatOrigins(b.origins));
       if (visibleCols.has('process')) row.push(b.process_detail || PROCESS_LABEL[b.process_category]);
       if (visibleCols.has('processing_plant')) row.push(b.processing_plant || '');
       if (visibleCols.has('flavors')) row.push((b.flavors as string[]).join('、'));
@@ -283,7 +284,7 @@ export default function BeansQueryPage() {
                   </td>
                   {visibleCols.has('origins') && (
                     <td className="px-4 py-3 text-cafe-muted">
-                      {bean.origins.map(o => `${o.country}${o.region ? ' ' + o.region : ''}`).join('、')}
+                      {formatOrigins(bean.origins)}
                     </td>
                   )}
                   {visibleCols.has('process') && (

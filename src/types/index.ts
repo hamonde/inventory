@@ -9,6 +9,7 @@ export type BeanStatus = 'selling' | 'sold_out';
 export interface Origin {
   country: string;
   region?: string | null;
+  estate?: string | null;
 }
 
 export interface Bean {
@@ -65,5 +66,12 @@ export interface Country {
 export interface Region {
   id: number;
   country_id: number;
+  name_zh: string;
+}
+
+export interface Estate {
+  id: number;
+  country_id: number;
+  region_id?: number | null;
   name_zh: string;
 }

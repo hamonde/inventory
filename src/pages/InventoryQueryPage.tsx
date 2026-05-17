@@ -4,6 +4,7 @@ import { ChevronLeft } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { getBatchesForWarehouse } from '@/lib/inventory';
+import { formatOrigins } from '@/lib/origin';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
@@ -262,7 +263,7 @@ export default function InventoryQueryPage() {
               <div>
                 <span className="text-cafe-muted">產地：</span>
                 <span className="text-cafe-dark">
-                  {selectedBean.origins.map(o => `${o.country}${o.region ? ' ' + o.region : ''}`).join('、')}
+                  {formatOrigins(selectedBean.origins)}
                 </span>
               </div>
               <div>

@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select';
 import FlavorPickerDialog from '@/components/FlavorPickerDialog';
 import OriginPickerDialog from '@/components/OriginPickerDialog';
+import { formatOrigin } from '@/lib/origin';
 import type { Bean, ProcessCategory, BeanStatus, Origin } from '@/types';
 
 const PROCESS_LABEL: Record<ProcessCategory, string> = {
@@ -117,7 +118,7 @@ export default function BeanEditPage() {
             <div className="flex flex-wrap gap-2 mb-2">
               {origins.map((o, i) => (
                 <span key={i} className="flex items-center gap-1 bg-cafe-bg/50 text-cafe-dark text-sm rounded-lg px-3 py-1">
-                  {o.country}{o.region ? ` ${o.region}` : ''}
+                  {formatOrigin(o)}
                   <button onClick={() => setOrigins(prev => prev.filter((_, j) => j !== i))}><X className="h-3 w-3" /></button>
                 </span>
               ))}

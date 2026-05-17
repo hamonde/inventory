@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select';
 import FlavorPickerDialog from '@/components/FlavorPickerDialog';
 import OriginPickerDialog from '@/components/OriginPickerDialog';
+import { formatOrigin, formatOrigins } from '@/lib/origin';
 import type { Bean, ProcessCategory, BeanStatus, Origin } from '@/types';
 
 const PROCESS_LABEL: Record<ProcessCategory, string> = {
@@ -148,7 +149,7 @@ export default function BeanCreatePage() {
               <div key={item.tempId} className="flex items-center justify-between text-sm bg-cafe-bg/30 rounded-lg px-3 py-2">
                 <span className="text-cafe-dark font-medium">{item.name}</span>
                 <div className="flex items-center gap-3">
-                  <span className="text-cafe-muted">{item.origins.map(o => `${o.country}${o.region ? ' ' + o.region : ''}`).join('、')}</span>
+                  <span className="text-cafe-muted">{formatOrigins(item.origins)}</span>
                   <button
                     onClick={() => setPending(prev => prev.filter(p => p.tempId !== item.tempId))}
                     className="text-cafe-muted hover:text-red-500"
@@ -178,7 +179,7 @@ export default function BeanCreatePage() {
             <div className="flex flex-wrap gap-2 mb-2">
               {form.origins.map((o, i) => (
                 <span key={i} className="flex items-center gap-1 bg-cafe-bg/50 text-cafe-dark text-sm rounded-lg px-3 py-1">
-                  {o.country}{o.region ? ` ${o.region}` : ''}
+                  {formatOrigin(o)}
                   <button onClick={() => setForm(f => ({ ...f, origins: f.origins.filter((_, j) => j !== i) }))}>
                     <X className="h-3 w-3" />
                   </button>
