@@ -1,0 +1,20 @@
+{
+  "name": "HAMONDE CAFE 庫存系統",
+  "short_name": "HAMONDE 庫存",
+  "description": "咖啡廳內部使用的咖啡豆庫存管理系統",
+  "start_url": "/inventory/",
+  "scope": "/inventory/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ACB6BF",
+  "theme_color": "#AC6342",
+  "lang": "zh-Hant",
+  "icons": [
+    {
+      "src": "app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

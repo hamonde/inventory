@@ -1,4 +1,4 @@
-import { Coffee, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -22,9 +22,11 @@ export default function Layout() {
             className="flex items-center gap-3 cursor-pointer"
             onClick={() => navigate('/home')}
           >
-            <div className="w-9 h-9 rounded-full bg-cafe-primary flex items-center justify-center">
-              <Coffee className="h-5 w-5 text-cafe-cream" />
-            </div>
+            <img
+              src={`${import.meta.env.BASE_URL}favicon.svg`}
+              alt="HAMONDE CAFE"
+              className="w-10 h-10 rounded-lg"
+            />
             <span className="font-semibold text-cafe-dark text-base tracking-wide">
               HAMONDE CAFE
             </span>

@@ -303,7 +303,7 @@ export default function BeanCreatePage() {
         <div>
           <Label className="mb-2 block">狀態 <span className="text-red-500">*</span></Label>
           <div className="flex gap-2">
-            {([['selling', '販售中'], ['sold_out', '售完']] as [BeanStatus, string][]).map(([val, label]) => (
+            {([['selling', '販售中'], ['sold_out', '暫停供應']] as [BeanStatus, string][]).map(([val, label]) => (
               <button
                 key={val}
                 onClick={() => setForm(f => ({ ...f, status: val }))}

@@ -20,7 +20,7 @@ const PROCESS_LABEL: Record<ProcessCategory, string> = {
 
 const STATUS_LABEL: Record<BeanStatus, string> = {
   selling: '販售中',
-  sold_out: '售完',
+  sold_out: '暫停供應',
 };
 
 const OPTIONAL_COLS = [
@@ -44,7 +44,7 @@ export default function BeansQueryPage() {
   const [loading, setLoading] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | BeanStatus>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | BeanStatus>('selling');
   const [processFilter, setProcessFilter] = useState<'all' | ProcessCategory>('all');
   const [visibleCols, setVisibleCols] = useState<Set<OptColKey>>(new Set(['origins', 'process']));
   const [deleteTarget, setDeleteTarget] = useState<Bean | null>(null);
@@ -163,35 +163,66 @@ export default function BeansQueryPage() {
 
       {/* Filters */}
       <div className="bg-cafe-cream rounded-xl border border-cafe-border p-4 mb-4 flex flex-col gap-4">
-        {/* 銷售狀態篩選 */}
-        <div>
-          <div className="text-xs text-cafe-muted mb-1.5">銷售狀態</div>
-          <div className="flex gap-1.5 flex-wrap">
-            {([['all', '全部'], ['selling', '販售中'], ['sold_out', '售完']] as [string, string][]).map(([v, l]) => (
-              <button
-                key={v}
-                onClick={() => setStatusFilter(v as 'all' | BeanStatus)}
-                className={`px-3 py-1.5 rounded-lg text-sm min-h-[36px] transition-colors ${statusFilter === v ? 'bg-cafe-primary text-cafe-cream' : 'bg-cafe-bg/50 text-cafe-dark hover:bg-cafe-border'}`}
-              >
-                {l}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* 第一排：銷售狀態 + 處理法 同一行；搜尋圖示靠右對齊 */}
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex flex-wrap gap-6">
+            {/* 銷售狀態 */}
+            <div>
+              <div className="text-xs text-cafe-muted mb-1.5">銷售狀態</div>
+              <div className="flex gap-1.5 flex-wrap">
+                {([['all', '全部'], ['selling', '販售中'], ['sold_out', '暫停供應']] as [string, string][]).map(([v, l]) => (
+                  <button
+                    key={v}
+                    onClick={() => setStatusFilter(v as 'all' | BeanStatus)}
+                    className={`px-3 py-1.5 rounded-lg text-sm min-h-[36px] transition-colors ${statusFilter === v ? 'bg-cafe-primary text-cafe-cream' : 'bg-cafe-bg/50 text-cafe-dark hover:bg-cafe-border'}`}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        {/* 處理法篩選 */}
-        <div>
-          <div className="text-xs text-cafe-muted mb-1.5">處理法</div>
-          <div className="flex gap-1.5 flex-wrap">
-            {([['all', '全部'], ['sun_dried', '日曬'], ['washed', '水洗'], ['honey', '蜜處理'], ['special', '特殊處理']] as [string, string][]).map(([v, l]) => (
-              <button
-                key={v}
-                onClick={() => setProcessFilter(v as 'all' | ProcessCategory)}
-                className={`px-3 py-1.5 rounded-lg text-sm min-h-[36px] transition-colors ${processFilter === v ? 'bg-cafe-primary text-cafe-cream' : 'bg-cafe-bg/50 text-cafe-dark hover:bg-cafe-border'}`}
-              >
-                {l}
-              </button>
-            ))}
+            {/* 處理法 */}
+            <div>
+              <div className="text-xs text-cafe-muted mb-1.5">處理法</div>
+              <div className="flex gap-1.5 flex-wrap">
+                {([['all', '全部'], ['sun_dried', '日曬'], ['washed', '水洗'], ['honey', '蜜處理'], ['special', '特殊處理']] as [string, string][]).map(([v, l]) => (
+                  <button
+                    key={v}
+                    onClick={() => setProcessFilter(v as 'all' | ProcessCategory)}
+                    className={`px-3 py-1.5 rounded-lg text-sm min-h-[36px] transition-colors ${processFilter === v ? 'bg-cafe-primary text-cafe-cream' : 'bg-cafe-bg/50 text-cafe-dark hover:bg-cafe-border'}`}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 搜尋圖示（右上對齊第一排按鈕底部） */}
+          <div className="flex items-center gap-2 mt-[22px]">
+            {searchOpen && (
+              <div className="relative w-48">
+                <Input
+                  placeholder="輸入豆名關鍵字"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  autoFocus
+                />
+                {search && (
+                  <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-cafe-muted">
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            )}
+            <button
+              onClick={() => { setSearchOpen(v => !v); if (searchOpen) setSearch(''); }}
+              className="p-2 text-cafe-muted hover:text-cafe-dark border border-cafe-border rounded-lg min-h-[36px] min-w-[36px] flex items-center justify-center"
+              title="搜尋豆名"
+            >
+              <Search className="h-5 w-5" />
+            </button>
           </div>
         </div>
 
@@ -214,31 +245,6 @@ export default function BeansQueryPage() {
                 {label}
               </button>
             ))}
-          </div>
-        </div>
-
-        {/* 搜尋 */}
-        <div>
-          <div className="text-xs text-cafe-muted mb-1.5">搜尋豆名</div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setSearchOpen(v => !v)} className="p-2 text-cafe-muted hover:text-cafe-dark border border-cafe-border rounded-lg">
-              <Search className="h-5 w-5" />
-            </button>
-            {searchOpen && (
-              <div className="relative flex-1 max-w-xs">
-                <Input
-                  placeholder="輸入豆名關鍵字"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  autoFocus
-                />
-                {search && (
-                  <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-cafe-muted">
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>

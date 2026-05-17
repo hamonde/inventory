@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- 米色底（PWA 主畫面圖示需要不透明背景） -->
+  <rect width="512" height="512" fill="#FBF8F2"/>
+
+  <g transform="translate(0,0)">
+    <!-- 蒸氣（芥末黃） -->
+    <path d="M176 112 Q160 80 176 48" stroke="#DFCC60" stroke-width="16" fill="none" stroke-linecap="round"/>
+    <path d="M256 96 Q272 64 256 32" stroke="#DFCC60" stroke-width="16" fill="none" stroke-linecap="round"/>
+    <path d="M336 112 Q320 80 336 48" stroke="#DFCC60" stroke-width="16" fill="none" stroke-linecap="round"/>
+
+    <!-- 咖啡杯身（磚紅） -->
+    <path d="M112 176 L112 368 Q112 432 176 432 L304 432 Q368 432 368 368 L368 176 Z" fill="#AC6342"/>
+
+    <!-- 咖啡表面（深棕） -->
+    <ellipse cx="240" cy="184" rx="120" ry="24" fill="#3D2817"/>
+
+    <!-- 杯耳 -->
+    <path d="M368 224 Q448 224 448 288 Q448 352 368 352" stroke="#AC6342" stroke-width="32" fill="none" stroke-linecap="round"/>
+
+    <!-- 杯底盤 -->
+    <ellipse cx="240" cy="448" rx="176" ry="24" fill="#8A4F32"/>
+
+    <!-- 萌系眼睛 -->
+    <circle cx="192" cy="288" r="24" fill="#FBF8F2"/>
+    <circle cx="288" cy="288" r="24" fill="#FBF8F2"/>
+    <circle cx="196" cy="292" r="12" fill="#3D2817"/>
+    <circle cx="292" cy="292" r="12" fill="#3D2817"/>
+    <circle cx="200" cy="284" r="5" fill="#FBF8F2"/>
+    <circle cx="296" cy="284" r="5" fill="#FBF8F2"/>
+
+    <!-- 微笑 -->
+    <path d="M192 344 Q240 380 288 344" stroke="#FBF8F2" stroke-width="16" fill="none" stroke-linecap="round"/>
+
+    <!-- 腮紅 -->
+    <ellipse cx="152" cy="336" rx="18" ry="12" fill="#DFCC60" opacity="0.85"/>
+    <ellipse cx="328" cy="336" rx="18" ry="12" fill="#DFCC60" opacity="0.85"/>
+  </g>
+</svg>
