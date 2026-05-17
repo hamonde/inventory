@@ -45,16 +45,17 @@ export default function HomePage() {
 
   const loadFreshness = () => {
     Promise.all([
-      supabase.from('beans').select('id').is('deleted_at', null),
+      supabase.from('beans').select('id, status').is('deleted_at', null),
       supabase.from('inventory_transactions').select('*'),
     ]).then(([{ data: beans }, { data: txs }]) => {
       if (beans && txs) {
-        const beanIds = (beans as Pick<Bean, 'id'>[]).map(b => b.id);
+        const beanList = beans as Pick<Bean, 'id' | 'status'>[];
+        const beanIds = beanList.map(b => b.id);
         const txList = txs as InventoryTransaction[];
         const stats = calcFreshnessStats(txList, beanIds);
         setResting(stats.resting);
         setExpired(stats.expired);
-        setLowStock(calcLowStockCount(txList, beanIds));
+        setLowStock(calcLowStockCount(txList, beanList));
       }
       setAlertLoading(false);
     });

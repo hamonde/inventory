@@ -2,35 +2,35 @@
   <!-- 圓角米色底 -->
   <rect width="64" height="64" rx="14" fill="#FBF8F2"/>
 
-  <!-- 蒸氣（芥末黃） -->
-  <path d="M22 14 Q20 10 22 6" stroke="#DFCC60" stroke-width="2" fill="none" stroke-linecap="round"/>
-  <path d="M32 12 Q34 8 32 4" stroke="#DFCC60" stroke-width="2" fill="none" stroke-linecap="round"/>
-  <path d="M42 14 Q40 10 42 6" stroke="#DFCC60" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- 剪貼板背板（磚紅） -->
+  <rect x="11" y="14" width="42" height="44" rx="5" fill="#AC6342"/>
 
-  <!-- 咖啡杯身（磚紅） -->
-  <path d="M14 22 L14 46 Q14 54 22 54 L38 54 Q46 54 46 46 L46 22 Z" fill="#AC6342"/>
+  <!-- 紙張（米白） -->
+  <rect x="14" y="18" width="36" height="38" rx="2" fill="#FBF8F2"/>
 
-  <!-- 咖啡表面（深棕） -->
-  <ellipse cx="30" cy="23" rx="15" ry="3" fill="#3D2817"/>
+  <!-- 上方夾子（深棕 + 芥末黃裝飾） -->
+  <rect x="23" y="9" width="18" height="11" rx="2.5" fill="#8A4F32"/>
+  <ellipse cx="32" cy="11" rx="3" ry="1.2" fill="#DFCC60"/>
 
-  <!-- 杯耳 -->
-  <path d="M46 28 Q56 28 56 36 Q56 44 46 44" stroke="#AC6342" stroke-width="4" fill="none" stroke-linecap="round"/>
-
-  <!-- 杯底盤 -->
-  <ellipse cx="30" cy="56" rx="22" ry="3" fill="#8A4F32"/>
-
-  <!-- 萌系眼睛（白底 + 深棕瞳孔 + 高光） -->
-  <circle cx="24" cy="36" r="3" fill="#FBF8F2"/>
-  <circle cx="36" cy="36" r="3" fill="#FBF8F2"/>
-  <circle cx="24.5" cy="36.5" r="1.5" fill="#3D2817"/>
-  <circle cx="36.5" cy="36.5" r="1.5" fill="#3D2817"/>
-  <circle cx="25" cy="35.5" r="0.6" fill="#FBF8F2"/>
-  <circle cx="37" cy="35.5" r="0.6" fill="#FBF8F2"/>
+  <!-- 萌系大眼睛（在紙上方） -->
+  <circle cx="23" cy="29" r="3" fill="#3D2817"/>
+  <circle cx="41" cy="29" r="3" fill="#3D2817"/>
+  <circle cx="23.8" cy="28" r="1" fill="#FBF8F2"/>
+  <circle cx="41.8" cy="28" r="1" fill="#FBF8F2"/>
 
   <!-- 微笑 -->
-  <path d="M24 43 Q30 47.5 36 43" stroke="#FBF8F2" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M27 36 Q32 39.5 37 36" stroke="#3D2817" stroke-width="1.8" fill="none" stroke-linecap="round"/>
 
-  <!-- 紅潤腮紅（芥末黃） -->
-  <ellipse cx="19" cy="42" rx="2.2" ry="1.5" fill="#DFCC60" opacity="0.85"/>
-  <ellipse cx="41" cy="42" rx="2.2" ry="1.5" fill="#DFCC60" opacity="0.85"/>
+  <!-- 腮紅（芥末黃） -->
+  <ellipse cx="18" cy="35" rx="2.2" ry="1.4" fill="#DFCC60" opacity="0.85"/>
+  <ellipse cx="46" cy="35" rx="2.2" ry="1.4" fill="#DFCC60" opacity="0.85"/>
+
+  <!-- 紙下方的庫存條目 -->
+  <circle cx="18" cy="44" r="1.5" fill="#AC6342"/>
+  <rect x="22" y="43" width="16" height="1.8" rx="0.9" fill="#D6C9B8"/>
+  <rect x="40" y="43" width="6" height="1.8" rx="0.9" fill="#DFCC60"/>
+
+  <circle cx="18" cy="49" r="1.5" fill="#AC6342"/>
+  <rect x="22" y="48" width="14" height="1.8" rx="0.9" fill="#D6C9B8"/>
+  <rect x="38" y="48" width="8" height="1.8" rx="0.9" fill="#DFCC60"/>
 </svg>

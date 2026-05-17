@@ -19,14 +19,9 @@ export default function Layout() {
       <header className="bg-cafe-cream border-b border-cafe-border px-4 py-3">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div
-            className="flex items-center gap-3 cursor-pointer"
+            className="cursor-pointer"
             onClick={() => navigate('/home')}
           >
-            <img
-              src={`${import.meta.env.BASE_URL}favicon.svg`}
-              alt="HAMONDE CAFE"
-              className="w-10 h-10 rounded-lg"
-            />
             <span className="font-semibold text-cafe-dark text-base tracking-wide">
               HAMONDE CAFE
             </span>

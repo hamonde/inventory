@@ -1,38 +1,36 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- 米色底（PWA 主畫面圖示需要不透明背景） -->
+  <!-- PWA 主畫面圖示需不透明背景（米色） -->
   <rect width="512" height="512" fill="#FBF8F2"/>
 
-  <g transform="translate(0,0)">
-    <!-- 蒸氣（芥末黃） -->
-    <path d="M176 112 Q160 80 176 48" stroke="#DFCC60" stroke-width="16" fill="none" stroke-linecap="round"/>
-    <path d="M256 96 Q272 64 256 32" stroke="#DFCC60" stroke-width="16" fill="none" stroke-linecap="round"/>
-    <path d="M336 112 Q320 80 336 48" stroke="#DFCC60" stroke-width="16" fill="none" stroke-linecap="round"/>
+  <!-- 剪貼板背板 -->
+  <rect x="88" y="112" width="336" height="352" rx="40" fill="#AC6342"/>
 
-    <!-- 咖啡杯身（磚紅） -->
-    <path d="M112 176 L112 368 Q112 432 176 432 L304 432 Q368 432 368 368 L368 176 Z" fill="#AC6342"/>
+  <!-- 紙張 -->
+  <rect x="112" y="144" width="288" height="304" rx="16" fill="#FBF8F2"/>
 
-    <!-- 咖啡表面（深棕） -->
-    <ellipse cx="240" cy="184" rx="120" ry="24" fill="#3D2817"/>
+  <!-- 上方夾子 -->
+  <rect x="184" y="72" width="144" height="88" rx="20" fill="#8A4F32"/>
+  <ellipse cx="256" cy="88" rx="24" ry="10" fill="#DFCC60"/>
 
-    <!-- 杯耳 -->
-    <path d="M368 224 Q448 224 448 288 Q448 352 368 352" stroke="#AC6342" stroke-width="32" fill="none" stroke-linecap="round"/>
+  <!-- 萌系大眼睛 -->
+  <circle cx="184" cy="232" r="24" fill="#3D2817"/>
+  <circle cx="328" cy="232" r="24" fill="#3D2817"/>
+  <circle cx="190" cy="224" r="8" fill="#FBF8F2"/>
+  <circle cx="334" cy="224" r="8" fill="#FBF8F2"/>
 
-    <!-- 杯底盤 -->
-    <ellipse cx="240" cy="448" rx="176" ry="24" fill="#8A4F32"/>
+  <!-- 微笑 -->
+  <path d="M216 288 Q256 316 296 288" stroke="#3D2817" stroke-width="14" fill="none" stroke-linecap="round"/>
 
-    <!-- 萌系眼睛 -->
-    <circle cx="192" cy="288" r="24" fill="#FBF8F2"/>
-    <circle cx="288" cy="288" r="24" fill="#FBF8F2"/>
-    <circle cx="196" cy="292" r="12" fill="#3D2817"/>
-    <circle cx="292" cy="292" r="12" fill="#3D2817"/>
-    <circle cx="200" cy="284" r="5" fill="#FBF8F2"/>
-    <circle cx="296" cy="284" r="5" fill="#FBF8F2"/>
+  <!-- 腮紅 -->
+  <ellipse cx="144" cy="280" rx="18" ry="11" fill="#DFCC60" opacity="0.85"/>
+  <ellipse cx="368" cy="280" rx="18" ry="11" fill="#DFCC60" opacity="0.85"/>
 
-    <!-- 微笑 -->
-    <path d="M192 344 Q240 380 288 344" stroke="#FBF8F2" stroke-width="16" fill="none" stroke-linecap="round"/>
+  <!-- 紙下方的庫存條目 -->
+  <circle cx="144" cy="356" r="12" fill="#AC6342"/>
+  <rect x="172" y="348" width="128" height="14" rx="7" fill="#D6C9B8"/>
+  <rect x="312" y="348" width="48" height="14" rx="7" fill="#DFCC60"/>
 
-    <!-- 腮紅 -->
-    <ellipse cx="152" cy="336" rx="18" ry="12" fill="#DFCC60" opacity="0.85"/>
-    <ellipse cx="328" cy="336" rx="18" ry="12" fill="#DFCC60" opacity="0.85"/>
-  </g>
+  <circle cx="144" cy="396" r="12" fill="#AC6342"/>
+  <rect x="172" y="388" width="112" height="14" rx="7" fill="#D6C9B8"/>
+  <rect x="296" y="388" width="64" height="14" rx="7" fill="#DFCC60"/>
 </svg>

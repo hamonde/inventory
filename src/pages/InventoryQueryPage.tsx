@@ -118,10 +118,18 @@ export default function InventoryQueryPage() {
     storage: calcFilteredWarehouseTotal(allTx, b.id, 'storage', freshFilter),
     display: calcFilteredWarehouseTotal(allTx, b.id, 'display', freshFilter),
   })).filter(r => {
-    const has = r.storage > 0 || r.display > 0;
-    if (!has) return false;
-    if (freshFilter === 'low_stock') return (r.storage + r.display) <= 2;
-    return true;
+    const hasStock = r.storage > 0 || r.display > 0;
+    const isSelling = r.bean.status === 'selling';
+    if (freshFilter === 'low_stock') {
+      // 低庫存：販售中 且 總數 ≤ 2（含 0）
+      return isSelling && (r.storage + r.display) <= 2;
+    }
+    if (freshFilter === 'resting' || freshFilter === 'normal' || freshFilter === 'expired') {
+      // 新鮮度相關篩選需要有符合條件的批次
+      return hasStock;
+    }
+    // 全部：販售中豆子一律顯示（含 0 庫存）+ 暫停供應但仍有庫存的
+    return isSelling || hasStock;
   });
 
   const sorted = [...filtered].sort((a, b) => {

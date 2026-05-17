@@ -39,15 +39,16 @@ export function calcFreshnessStats(
   return { resting, expired };
 }
 
-/** 計算低庫存豆子種數（總數 ≤ 2 且 > 0 的豆子） */
+/** 計算低庫存豆子種數（販售中 且 總數 ≤ 2 的豆子，含 0 庫存） */
 export function calcLowStockCount(
   transactions: InventoryTransaction[],
-  beanIds: string[]
+  beans: { id: string; status: string }[]
 ): number {
   let count = 0;
-  for (const beanId of beanIds) {
-    const total = getAllActiveBatches(transactions, beanId).reduce((s, b) => s + b.quantity, 0);
-    if (total > 0 && total <= 2) count++;
+  for (const bean of beans) {
+    if (bean.status !== 'selling') continue;
+    const total = getAllActiveBatches(transactions, bean.id).reduce((s, b) => s + b.quantity, 0);
+    if (total <= 2) count++;
   }
   return count;
 }

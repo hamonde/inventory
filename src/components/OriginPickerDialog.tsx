@@ -32,6 +32,12 @@ export default function OriginPickerDialog({
   const [addingRegion, setAddingRegion] = useState(false);
   const [newRegionInput, setNewRegionInput] = useState('');
 
+  // 新增國家
+  const [addingCountry, setAddingCountry] = useState(false);
+  const [newCountryZh, setNewCountryZh] = useState('');
+  const [newCountryEn, setNewCountryEn] = useState('');
+  const [addingCountrySaving, setAddingCountrySaving] = useState(false);
+
   const [validationError, setValidationError] = useState('');
 
   // 載入國家
@@ -106,6 +112,35 @@ export default function OriginPickerDialog({
     onChange(selectedOrigins.filter((_, i) => i !== idx));
   };
 
+  // 新增國家到目前選的洲別
+  const addNewCountry = async () => {
+    const zh = newCountryZh.trim();
+    const en = newCountryEn.trim();
+    if (!zh) return;
+    // 檢查是否已存在
+    if (countries.some(c => c.name_zh === zh)) {
+      setValidationError(`「${zh}」已存在於國家清單`);
+      setTimeout(() => setValidationError(''), 3000);
+      return;
+    }
+    setAddingCountrySaving(true);
+    const { data, error } = await supabase
+      .from('countries')
+      .insert({ continent: activeContinent, name_zh: zh, name_en: en || null })
+      .select()
+      .single();
+    setAddingCountrySaving(false);
+    if (error || !data) {
+      setValidationError('新增國家失敗，請再試一次');
+      setTimeout(() => setValidationError(''), 3000);
+      return;
+    }
+    setCountries(prev => [...prev, data as Country]);
+    setNewCountryZh('');
+    setNewCountryEn('');
+    setAddingCountry(false);
+  };
+
   const addNewRegion = async () => {
     if (!newRegionInput.trim() || !selectedCountry) return;
     const { data } = await supabase
@@ -141,6 +176,9 @@ export default function OriginPickerDialog({
       setSearchText('');
       setValidationError('');
       setAddingRegion(false);
+      setAddingCountry(false);
+      setNewCountryZh('');
+      setNewCountryEn('');
     }
     onOpenChange(val);
   };
@@ -330,6 +368,46 @@ export default function OriginPickerDialog({
                   </button>
                 ))}
               </div>
+
+              {/* 新增國家 */}
+              {addingCountry ? (
+                <div className="flex flex-col gap-2 mt-2 p-3 rounded-lg border border-cafe-border bg-cafe-bg/20">
+                  <div className="text-xs text-cafe-muted">新增國家到「{activeContinent}」</div>
+                  <Input
+                    autoFocus
+                    placeholder="國家中文名（必填）"
+                    value={newCountryZh}
+                    onChange={e => setNewCountryZh(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && addNewCountry()}
+                  />
+                  <Input
+                    placeholder="英文名（選填）"
+                    value={newCountryEn}
+                    onChange={e => setNewCountryEn(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && addNewCountry()}
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => { setAddingCountry(false); setNewCountryZh(''); setNewCountryEn(''); }}
+                      disabled={addingCountrySaving}
+                    >
+                      取消
+                    </Button>
+                    <Button size="sm" onClick={addNewCountry} disabled={!newCountryZh.trim() || addingCountrySaving}>
+                      {addingCountrySaving ? '新增中...' : '新增'}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  className="text-sm text-cafe-primary hover:underline text-left mt-2"
+                  onClick={() => setAddingCountry(true)}
+                >
+                  <Plus className="h-3.5 w-3.5 inline mr-1" />新增國家到「{activeContinent}」
+                </button>
+              )}
             </>
           )}
         </div>
