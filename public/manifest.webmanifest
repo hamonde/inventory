@@ -6,7 +6,7 @@
   "scope": "/inventory/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#ACB6BF",
+  "background_color": "#FBF8F2",
   "theme_color": "#AC6342",
   "lang": "zh-Hant",
   "icons": [
@@ -27,12 +27,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    },
-    {
-      "src": "app-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
     }
   ]
 }
