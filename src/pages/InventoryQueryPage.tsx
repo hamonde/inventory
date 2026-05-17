@@ -3,7 +3,7 @@ import { differenceInDays, parseISO } from 'date-fns';
 import { ChevronLeft } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { getBatchesForWarehouse } from '@/lib/inventory';
+import { getBatchesForWarehouse, getAllActiveBatches } from '@/lib/inventory';
 import { formatOrigins } from '@/lib/origin';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -100,7 +100,7 @@ export default function InventoryQueryPage() {
 
   const [batchDetailOpen, setBatchDetailOpen] = useState(false);
   const [batchBean, setBatchBean] = useState<Bean | null>(null);
-  const [batchWarehouse, setBatchWarehouse] = useState<'storage' | 'display'>('storage');
+  const [batchWarehouse, setBatchWarehouse] = useState<'storage' | 'display' | 'total'>('storage');
 
   useEffect(() => {
     Promise.all([
@@ -138,7 +138,7 @@ export default function InventoryQueryPage() {
     return (a.storage + a.display) - (b.storage + b.display);
   });
 
-  const openBatchDetail = (bean: Bean, warehouse: 'storage' | 'display') => {
+  const openBatchDetail = (bean: Bean, warehouse: 'storage' | 'display' | 'total') => {
     setBatchBean(bean);
     setBatchWarehouse(warehouse);
     setBatchDetailOpen(true);
@@ -238,11 +238,23 @@ export default function InventoryQueryPage() {
                         </button>
                       ) : <span className="text-cafe-muted">—</span>}
                     </td>
-                    <td
-                      className={`px-4 py-3 text-center ${isLow ? 'font-bold text-lg' : 'font-semibold text-cafe-dark'}`}
-                      style={lowStyle}
-                    >
-                      {total}
+                    <td className="px-4 py-3 text-center">
+                      {total > 0 ? (
+                        <button
+                          className={`hover:underline ${isLow ? 'font-bold text-lg' : 'font-semibold text-cafe-dark'}`}
+                          style={lowStyle}
+                          onClick={() => openBatchDetail(bean, 'total')}
+                        >
+                          {total}
+                        </button>
+                      ) : (
+                        <span
+                          className={`${isLow ? 'font-bold text-lg' : 'font-semibold'}`}
+                          style={lowStyle}
+                        >
+                          {total}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 );
@@ -305,13 +317,19 @@ export default function InventoryQueryPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {batchBean?.name} — {batchWarehouse === 'storage' ? '二樓倉庫' : '展示櫃'}
+              {batchBean?.name} — {
+                batchWarehouse === 'storage' ? '二樓倉庫' :
+                batchWarehouse === 'display' ? '展示櫃' :
+                '全部批次（兩倉合計）'
+              }
             </DialogTitle>
           </DialogHeader>
           {batchBean && (
             <div className="flex flex-col gap-3">
               {filterBatchesByFreshness(
-                getBatchesForWarehouse(allTx, batchBean.id, batchWarehouse),
+                batchWarehouse === 'total'
+                  ? getAllActiveBatches(allTx, batchBean.id)
+                  : getBatchesForWarehouse(allTx, batchBean.id, batchWarehouse),
                 freshFilter
               ).map(b => (
                 <div key={b.roastDate} className="flex items-center justify-between bg-cafe-bg/30 rounded-lg px-3 py-2">

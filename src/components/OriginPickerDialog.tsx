@@ -149,6 +149,7 @@ export default function OriginPickerDialog({
     };
     if (isAlreadyAdded(origin.country, origin.region, origin.estate)) return;
     onChange([...selectedOrigins, origin]);
+    setValidationError(''); // 加入後清掉錯誤訊息
     // 寫入後回到第一步
     setStep('continent');
     setSelectedCountry(null);
@@ -239,7 +240,26 @@ export default function OriginPickerDialog({
 
   /* ── 確認 / 關閉 ────────────────────────── */
   const handleConfirm = () => {
-    if (selectedOrigins.length === 0) {
+    // 若使用者正在國家或產區頁面（已選國家但還沒按「+ 加入」），按確定時自動把目前選擇加入清單
+    let workingOrigins = selectedOrigins;
+    if (selectedCountry) {
+      const tentative: Origin = {
+        country: selectedCountry.name_zh,
+        region: selectedRegion?.name_zh ?? null,
+        estate: null,
+      };
+      const alreadyExists = workingOrigins.some(o =>
+        o.country === tentative.country &&
+        (o.region ?? null) === tentative.region &&
+        (o.estate ?? null) === tentative.estate
+      );
+      if (!alreadyExists) {
+        workingOrigins = [...workingOrigins, tentative];
+        onChange(workingOrigins);
+      }
+    }
+
+    if (workingOrigins.length === 0) {
       setValidationError('請至少選擇一個產地');
       return;
     }
@@ -305,7 +325,8 @@ export default function OriginPickerDialog({
             {step === 'continent' && (
               <button
                 onClick={() => { setSearchOpen(v => !v); setSearchText(''); }}
-                className="p-2 text-cafe-muted hover:text-cafe-dark rounded-lg"
+                className="p-2 mr-8 text-cafe-muted hover:text-cafe-dark rounded-lg"
+                title="搜尋"
               >
                 <Search className="h-5 w-5" />
               </button>
