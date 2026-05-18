@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { differenceInDays, parseISO } from 'date-fns';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, ChevronUp, ChevronDown } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { getBatchesForWarehouse, getAllActiveBatches } from '@/lib/inventory';
@@ -14,7 +14,8 @@ const PROCESS_LABEL: Record<ProcessCategory, string> = {
   sun_dried: '日曬', washed: '水洗', honey: '蜜處理', special: '特殊處理',
 };
 
-type SortMode = 'name' | 'total_asc';
+type SortKey = 'name' | 'storage' | 'display' | 'total';
+type SortDir = 'asc' | 'desc';
 type FreshFilter = 'all' | 'resting' | 'normal' | 'expired' | 'low_stock';
 
 const FRESH_TABS: { key: FreshFilter; label: string }[] = [
@@ -92,7 +93,20 @@ export default function InventoryQueryPage() {
   const [beans, setBeans] = useState<Bean[]>([]);
   const [allTx, setAllTx] = useState<InventoryTransaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortMode, setSortMode] = useState<SortMode>('name');
+  const [sortKey, setSortKey] = useState<SortKey>('name');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(key); setSortDir('asc'); }
+  };
+
+  const SortIcon = ({ k }: { k: SortKey }) => {
+    if (sortKey !== k) return <ChevronDown className="h-3.5 w-3.5 text-cafe-muted/40 inline ml-0.5" />;
+    return sortDir === 'asc'
+      ? <ChevronUp className="h-3.5 w-3.5 text-cafe-primary inline ml-0.5" />
+      : <ChevronDown className="h-3.5 w-3.5 text-cafe-primary inline ml-0.5" />;
+  };
   const [freshFilter, setFreshFilter] = useState<FreshFilter>(initialFilter);
 
   const [beanDetailOpen, setBeanDetailOpen] = useState(false);
@@ -134,8 +148,12 @@ export default function InventoryQueryPage() {
   });
 
   const sorted = [...filtered].sort((a, b) => {
-    if (sortMode === 'name') return a.bean.name.localeCompare(b.bean.name, 'zh-TW');
-    return (a.storage + a.display) - (b.storage + b.display);
+    const dir = sortDir === 'asc' ? 1 : -1;
+    if (sortKey === 'name') return a.bean.name.localeCompare(b.bean.name, 'zh-TW') * dir;
+    if (sortKey === 'storage') return (a.storage - b.storage) * dir;
+    if (sortKey === 'display') return (a.display - b.display) * dir;
+    // total
+    return ((a.storage + a.display) - (b.storage + b.display)) * dir;
   });
 
   const openBatchDetail = (bean: Bean, warehouse: 'storage' | 'display' | 'total') => {
@@ -151,20 +169,6 @@ export default function InventoryQueryPage() {
           <ChevronLeft className="h-7 w-7" />
         </button>
         <h1 className="text-xl font-semibold text-cafe-dark">查詢豆子庫存</h1>
-        <div className="ml-auto flex gap-2">
-          <button
-            onClick={() => setSortMode('name')}
-            className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${sortMode === 'name' ? 'bg-cafe-primary text-cafe-cream' : 'bg-cafe-cream text-cafe-muted border border-cafe-border hover:bg-cafe-border/30'}`}
-          >
-            豆名
-          </button>
-          <button
-            onClick={() => setSortMode('total_asc')}
-            className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${sortMode === 'total_asc' ? 'bg-cafe-primary text-cafe-cream' : 'bg-cafe-cream text-cafe-muted border border-cafe-border hover:bg-cafe-border/30'}`}
-          >
-            總數↑
-          </button>
-        </div>
       </div>
 
       {/* Freshness filter tabs */}
@@ -195,10 +199,30 @@ export default function InventoryQueryPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-cafe-border">
-                <th className="text-left px-4 py-3 text-cafe-muted font-medium">豆名</th>
-                <th className="text-center px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">二樓倉庫</th>
-                <th className="text-center px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">展示櫃</th>
-                <th className="text-center px-4 py-3 text-cafe-muted font-medium">總數</th>
+                <th
+                  className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap"
+                  onClick={() => toggleSort('name')}
+                >
+                  豆名<SortIcon k="name" />
+                </th>
+                <th
+                  className="text-center px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark"
+                  onClick={() => toggleSort('storage')}
+                >
+                  二樓倉庫<SortIcon k="storage" />
+                </th>
+                <th
+                  className="text-center px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark"
+                  onClick={() => toggleSort('display')}
+                >
+                  展示櫃<SortIcon k="display" />
+                </th>
+                <th
+                  className="text-center px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark"
+                  onClick={() => toggleSort('total')}
+                >
+                  總數<SortIcon k="total" />
+                </th>
               </tr>
             </thead>
             <tbody>
