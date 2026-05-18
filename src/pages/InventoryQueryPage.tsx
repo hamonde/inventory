@@ -14,7 +14,7 @@ const PROCESS_LABEL: Record<ProcessCategory, string> = {
   sun_dried: '日曬', washed: '水洗', honey: '蜜處理', special: '特殊處理',
 };
 
-type SortKey = 'name' | 'storage' | 'display' | 'total';
+type SortKey = 'name' | 'storage' | 'display' | 'total' | 'price_half_pound';
 type SortDir = 'asc' | 'desc';
 type FreshFilter = 'all' | 'resting' | 'normal' | 'expired' | 'low_stock';
 
@@ -93,7 +93,7 @@ export default function InventoryQueryPage() {
   const [beans, setBeans] = useState<Bean[]>([]);
   const [allTx, setAllTx] = useState<InventoryTransaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortKey, setSortKey] = useState<SortKey>('name');
+  const [sortKey, setSortKey] = useState<SortKey>('price_half_pound');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
   const toggleSort = (key: SortKey) => {
@@ -152,6 +152,7 @@ export default function InventoryQueryPage() {
     if (sortKey === 'name') return a.bean.name.localeCompare(b.bean.name, 'zh-TW') * dir;
     if (sortKey === 'storage') return (a.storage - b.storage) * dir;
     if (sortKey === 'display') return (a.display - b.display) * dir;
+    if (sortKey === 'price_half_pound') return (a.bean.price_half_pound - b.bean.price_half_pound) * dir;
     // total
     return ((a.storage + a.display) - (b.storage + b.display)) * dir;
   });
