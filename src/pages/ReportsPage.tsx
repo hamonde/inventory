@@ -314,6 +314,18 @@ export default function ReportsPage() {
                     <div className="text-cafe-dark">{detailBean.processing_plant}</div>
                   </div>
                 )}
+                {detailBean.variety && (
+                  <div>
+                    <div className="text-xs text-cafe-muted mb-0.5">品種</div>
+                    <div className="text-cafe-dark">{detailBean.variety}</div>
+                  </div>
+                )}
+                {detailBean.grade && (
+                  <div>
+                    <div className="text-xs text-cafe-muted mb-0.5">等級</div>
+                    <div className="text-cafe-dark">{detailBean.grade}</div>
+                  </div>
+                )}
                 <div>
                   <div className="text-xs text-cafe-muted mb-0.5">半磅售價</div>
                   <div className="text-cafe-dark font-medium">NT$ {detailBean.price_half_pound.toLocaleString()}</div>

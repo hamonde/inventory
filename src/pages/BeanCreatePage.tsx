@@ -27,6 +27,8 @@ interface BeanFormState {
   process_category: ProcessCategory | '';
   process_detail: string;
   processing_plant: string;
+  variety: string;
+  grade: string;
   flavors: string[];
   price_drip: string;
   price_shopee_half_pound: string;
@@ -43,6 +45,8 @@ function emptyForm(): BeanFormState {
     process_category: '',
     process_detail: '',
     processing_plant: '',
+    variety: '',
+    grade: '',
     flavors: [],
     price_drip: '',
     price_shopee_half_pound: '',
@@ -113,6 +117,8 @@ export default function BeanCreatePage() {
           process_category: process_category as ProcessCategory,
           process_detail: process_detail || null,
           processing_plant: item.origins.length === 1 ? (item.processing_plant || null) : null,
+          variety: item.variety.trim() || null,
+          grade: item.grade.trim() || null,
           flavors: item.flavors,
           price_drip: Number(item.price_drip) || 0,
           price_shopee_half_pound: Number(item.price_shopee_half_pound) || 0,
@@ -215,6 +221,26 @@ export default function BeanCreatePage() {
             value={form.name}
             onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
           />
+        </div>
+
+        {/* Variety / Grade */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label className="mb-2 block">品種</Label>
+            <Input
+              placeholder="例：阿拉比卡、藝伎（選填）"
+              value={form.variety}
+              onChange={e => setForm(f => ({ ...f, variety: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label className="mb-2 block">等級</Label>
+            <Input
+              placeholder="例：G1、SHB、AA（選填）"
+              value={form.grade}
+              onChange={e => setForm(f => ({ ...f, grade: e.target.value }))}
+            />
+          </div>
         </div>
 
         {/* Process category */}
@@ -347,6 +373,8 @@ export default function BeanCreatePage() {
                     process_category: form.process_category as ProcessCategory,
                     process_detail: process_detail || null,
                     processing_plant: form.origins.length === 1 ? (form.processing_plant || null) : null,
+                    variety: form.variety.trim() || null,
+                    grade: form.grade.trim() || null,
                     flavors: form.flavors,
                     price_drip: Number(form.price_drip) || 0,
                     price_shopee_half_pound: Number(form.price_shopee_half_pound) || 0,

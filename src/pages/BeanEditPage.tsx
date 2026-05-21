@@ -28,6 +28,8 @@ export default function BeanEditPage() {
   const [processCategory, setProcessCategory] = useState<ProcessCategory | ''>('');
   const [processDetail, setProcessDetail] = useState('');
   const [processingPlant, setProcessingPlant] = useState('');
+  const [variety, setVariety] = useState('');
+  const [grade, setGrade] = useState('');
   const [flavors, setFlavors] = useState<string[]>([]);
   const [priceDrip, setPriceDrip] = useState('');
   const [priceShopeeHalfPound, setPriceShopeeHalfPound] = useState('');
@@ -53,6 +55,8 @@ export default function BeanEditPage() {
         setProcessCategory(b.process_category);
         setProcessDetail(b.process_detail ?? '');
         setProcessingPlant(b.processing_plant ?? '');
+        setVariety(b.variety ?? '');
+        setGrade(b.grade ?? '');
         setFlavors(b.flavors as string[]);
         setPriceDrip(String(b.price_drip));
         setPriceShopeeHalfPound(String(b.price_shopee_half_pound ?? 0));
@@ -86,6 +90,8 @@ export default function BeanEditPage() {
       process_category: processCategory,
       process_detail: processDetail || null,
       processing_plant: origins.length === 1 ? (processingPlant || null) : null,
+      variety: variety.trim() || null,
+      grade: grade.trim() || null,
       flavors,
       price_drip: Number(priceDrip) || 0,
       price_shopee_half_pound: Number(priceShopeeHalfPound) || 0,
@@ -142,6 +148,25 @@ export default function BeanEditPage() {
         <div>
           <Label className="mb-2 block">名稱 <span className="text-red-500">*</span></Label>
           <Input value={name} onChange={e => setName(e.target.value)} />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label className="mb-2 block">品種</Label>
+            <Input
+              placeholder="例：阿拉比卡、藝伎（選填）"
+              value={variety}
+              onChange={e => setVariety(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label className="mb-2 block">等級</Label>
+            <Input
+              placeholder="例：G1、SHB、AA（選填）"
+              value={grade}
+              onChange={e => setGrade(e.target.value)}
+            />
+          </div>
         </div>
 
         <div>

@@ -19,6 +19,8 @@ export interface Bean {
   process_category: ProcessCategory;
   process_detail?: string | null;
   processing_plant?: string | null;
+  variety?: string | null;
+  grade?: string | null;
   flavors: string[];
   price_drip: number;
   price_shopee_half_pound: number;

@@ -26,8 +26,10 @@ const STATUS_LABEL: Record<BeanStatus, string> = {
 
 const OPTIONAL_COLS = [
   { key: 'origins', label: '產地' },
-  { key: 'process', label: '處理法' },
   { key: 'processing_plant', label: '處理廠' },
+  { key: 'variety', label: '品種' },
+  { key: 'grade', label: '等級' },
+  { key: 'process', label: '處理法' },
   { key: 'flavors', label: '參考風味' },
   { key: 'price_drip', label: '掛耳' },
   { key: 'price_half_pound', label: '半磅' },
@@ -40,7 +42,7 @@ type OptColKey = typeof OPTIONAL_COLS[number]['key'];
 const ALL_COL_KEYS: OptColKey[] = OPTIONAL_COLS.map(c => c.key);
 
 type SortKey =
-  | 'name' | 'status' | 'origins' | 'process' | 'processing_plant'
+  | 'name' | 'status' | 'origins' | 'processing_plant' | 'variety' | 'grade' | 'process'
   | 'price_drip' | 'price_shopee_half_pound' | 'price_half_pound' | 'price_pour_over' | 'price_syphon';
 type SortDir = 'asc' | 'desc';
 
@@ -53,7 +55,7 @@ export default function BeansQueryPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | BeanStatus>('selling');
   const [processFilter, setProcessFilter] = useState<'all' | ProcessCategory>('all');
-  const [visibleCols, setVisibleCols] = useState<Set<OptColKey>>(new Set(['origins', 'process', 'price_half_pound']));
+  const [visibleCols, setVisibleCols] = useState<Set<OptColKey>>(new Set(['origins', 'processing_plant', 'variety', 'grade', 'process', 'price_half_pound']));
   const [deleteTarget, setDeleteTarget] = useState<Bean | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('price_half_pound');
@@ -110,6 +112,8 @@ export default function BeansQueryPage() {
         return cmpStr(ax, bx);
       }
       case 'processing_plant': return cmpStr(a.processing_plant ?? '', b.processing_plant ?? '');
+      case 'variety': return cmpStr(a.variety ?? '', b.variety ?? '');
+      case 'grade': return cmpStr(a.grade ?? '', b.grade ?? '');
       case 'price_drip': return cmpNum(a.price_drip, b.price_drip);
       case 'price_shopee_half_pound': return cmpNum(a.price_shopee_half_pound ?? 0, b.price_shopee_half_pound ?? 0);
       case 'price_half_pound': return cmpNum(a.price_half_pound, b.price_half_pound);
@@ -159,8 +163,10 @@ export default function BeansQueryPage() {
     }
     const header = ['名稱', '狀態'];
     if (visibleCols.has('origins')) header.push('產地');
-    if (visibleCols.has('process')) header.push('處理法');
     if (visibleCols.has('processing_plant')) header.push('處理廠');
+    if (visibleCols.has('variety')) header.push('品種');
+    if (visibleCols.has('grade')) header.push('等級');
+    if (visibleCols.has('process')) header.push('處理法');
     if (visibleCols.has('flavors')) header.push('參考風味');
     if (visibleCols.has('price_drip')) header.push('掛耳價');
     if (visibleCols.has('price_half_pound')) header.push('半磅價');
@@ -171,8 +177,10 @@ export default function BeansQueryPage() {
     const rows = sorted.map(b => {
       const row: (string | number)[] = [b.name, STATUS_LABEL[b.status]];
       if (visibleCols.has('origins')) row.push(formatOrigins(b.origins));
-      if (visibleCols.has('process')) row.push(b.process_detail || PROCESS_LABEL[b.process_category]);
       if (visibleCols.has('processing_plant')) row.push(b.processing_plant || '');
+      if (visibleCols.has('variety')) row.push(b.variety || '');
+      if (visibleCols.has('grade')) row.push(b.grade || '');
+      if (visibleCols.has('process')) row.push(b.process_detail || PROCESS_LABEL[b.process_category]);
       if (visibleCols.has('flavors')) row.push((b.flavors as string[]).join('、'));
       if (visibleCols.has('price_drip')) row.push(b.price_drip);
       if (visibleCols.has('price_half_pound')) row.push(b.price_half_pound);
@@ -321,14 +329,24 @@ export default function BeansQueryPage() {
                     產地<SortIcon k="origins" />
                   </th>
                 )}
-                {visibleCols.has('process') && (
-                  <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('process')}>
-                    處理法<SortIcon k="process" />
-                  </th>
-                )}
                 {visibleCols.has('processing_plant') && (
                   <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('processing_plant')}>
                     處理廠<SortIcon k="processing_plant" />
+                  </th>
+                )}
+                {visibleCols.has('variety') && (
+                  <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('variety')}>
+                    品種<SortIcon k="variety" />
+                  </th>
+                )}
+                {visibleCols.has('grade') && (
+                  <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('grade')}>
+                    等級<SortIcon k="grade" />
+                  </th>
+                )}
+                {visibleCols.has('process') && (
+                  <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('process')}>
+                    處理法<SortIcon k="process" />
                   </th>
                 )}
                 {visibleCols.has('flavors') && <th className="text-left px-4 py-3 text-cafe-muted font-medium">風味</th>}
@@ -374,13 +392,19 @@ export default function BeansQueryPage() {
                       {formatOrigins(bean.origins)}
                     </td>
                   )}
+                  {visibleCols.has('processing_plant') && (
+                    <td className="px-4 py-3 text-cafe-muted">{bean.processing_plant || '—'}</td>
+                  )}
+                  {visibleCols.has('variety') && (
+                    <td className="px-4 py-3 text-cafe-muted">{bean.variety || '—'}</td>
+                  )}
+                  {visibleCols.has('grade') && (
+                    <td className="px-4 py-3 text-cafe-muted">{bean.grade || '—'}</td>
+                  )}
                   {visibleCols.has('process') && (
                     <td className="px-4 py-3 text-cafe-muted">
                       {bean.process_detail || PROCESS_LABEL[bean.process_category]}
                     </td>
-                  )}
-                  {visibleCols.has('processing_plant') && (
-                    <td className="px-4 py-3 text-cafe-muted">{bean.processing_plant || '—'}</td>
                   )}
                   {visibleCols.has('flavors') && (
                     <td className="px-4 py-3">

@@ -315,6 +315,18 @@ export default function InventoryQueryPage() {
                   <span className="text-cafe-dark">{selectedBean.processing_plant}</span>
                 </div>
               )}
+              {selectedBean.variety && (
+                <div>
+                  <span className="text-cafe-muted">品種：</span>
+                  <span className="text-cafe-dark">{selectedBean.variety}</span>
+                </div>
+              )}
+              {selectedBean.grade && (
+                <div>
+                  <span className="text-cafe-muted">等級：</span>
+                  <span className="text-cafe-dark">{selectedBean.grade}</span>
+                </div>
+              )}
               <div>
                 <span className="text-cafe-muted">參考風味：</span>
                 <span className="text-cafe-dark">{(selectedBean.flavors as string[]).join('、')}</span>
