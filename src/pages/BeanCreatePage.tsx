@@ -286,8 +286,8 @@ export default function BeanCreatePage() {
         <div className="grid grid-cols-2 gap-4">
           {[
             { key: 'price_drip', label: '掛耳價格' },
-            { key: 'price_shopee_half_pound', label: '蝦皮半磅' },
             { key: 'price_half_pound', label: '半磅價格' },
+            { key: 'price_shopee_half_pound', label: '蝦皮半磅' },
             { key: 'price_pour_over', label: '手沖價格' },
             { key: 'price_syphon', label: '虹吸價格' },
           ].map(({ key, label }) => (

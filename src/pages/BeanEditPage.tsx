@@ -194,7 +194,7 @@ export default function BeanEditPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          {[['price_drip', '掛耳價格', priceDrip, setPriceDrip], ['price_shopee_half_pound', '蝦皮半磅', priceShopeeHalfPound, setPriceShopeeHalfPound], ['price_half_pound', '半磅價格', priceHalfPound, setPriceHalfPound], ['price_pour_over', '手沖價格', pricePourOver, setPricePourOver], ['price_syphon', '虹吸價格', priceSyphon, setPriceSyphon]].map(([key, label, val, setter]) => (
+          {[['price_drip', '掛耳價格', priceDrip, setPriceDrip], ['price_half_pound', '半磅價格', priceHalfPound, setPriceHalfPound], ['price_shopee_half_pound', '蝦皮半磅', priceShopeeHalfPound, setPriceShopeeHalfPound], ['price_pour_over', '手沖價格', pricePourOver, setPricePourOver], ['price_syphon', '虹吸價格', priceSyphon, setPriceSyphon]].map(([key, label, val, setter]) => (
             <div key={key as string}>
               <Label className="mb-2 block">{label as string}</Label>
               <Input type="number" min={0} value={val as string} onChange={e => (setter as (v: string) => void)(e.target.value)} />

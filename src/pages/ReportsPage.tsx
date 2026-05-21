@@ -315,12 +315,12 @@ export default function ReportsPage() {
                   </div>
                 )}
                 <div>
-                  <div className="text-xs text-cafe-muted mb-0.5">蝦皮半磅</div>
-                  <div className="text-cafe-dark">NT$ {(detailBean.price_shopee_half_pound ?? 0).toLocaleString()}</div>
-                </div>
-                <div>
                   <div className="text-xs text-cafe-muted mb-0.5">半磅售價</div>
                   <div className="text-cafe-dark font-medium">NT$ {detailBean.price_half_pound.toLocaleString()}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-cafe-muted mb-0.5">蝦皮半磅</div>
+                  <div className="text-cafe-dark">NT$ {(detailBean.price_shopee_half_pound ?? 0).toLocaleString()}</div>
                 </div>
                 <div>
                   <div className="text-xs text-cafe-muted mb-0.5">手沖售價</div>
