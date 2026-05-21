@@ -30,6 +30,7 @@ const OPTIONAL_COLS = [
   { key: 'processing_plant', label: '處理廠' },
   { key: 'flavors', label: '參考風味' },
   { key: 'price_drip', label: '掛耳' },
+  { key: 'price_shopee_half_pound', label: '蝦皮半磅' },
   { key: 'price_half_pound', label: '半磅' },
   { key: 'price_pour_over', label: '手沖' },
   { key: 'price_syphon', label: '虹吸' },
@@ -40,7 +41,7 @@ const ALL_COL_KEYS: OptColKey[] = OPTIONAL_COLS.map(c => c.key);
 
 type SortKey =
   | 'name' | 'status' | 'origins' | 'process' | 'processing_plant'
-  | 'price_drip' | 'price_half_pound' | 'price_pour_over' | 'price_syphon';
+  | 'price_drip' | 'price_shopee_half_pound' | 'price_half_pound' | 'price_pour_over' | 'price_syphon';
 type SortDir = 'asc' | 'desc';
 
 export default function BeansQueryPage() {
@@ -110,6 +111,7 @@ export default function BeansQueryPage() {
       }
       case 'processing_plant': return cmpStr(a.processing_plant ?? '', b.processing_plant ?? '');
       case 'price_drip': return cmpNum(a.price_drip, b.price_drip);
+      case 'price_shopee_half_pound': return cmpNum(a.price_shopee_half_pound ?? 0, b.price_shopee_half_pound ?? 0);
       case 'price_half_pound': return cmpNum(a.price_half_pound, b.price_half_pound);
       case 'price_pour_over': return cmpNum(a.price_pour_over, b.price_pour_over);
       case 'price_syphon': return cmpNum(a.price_syphon, b.price_syphon);
@@ -161,6 +163,7 @@ export default function BeansQueryPage() {
     if (visibleCols.has('processing_plant')) header.push('處理廠');
     if (visibleCols.has('flavors')) header.push('參考風味');
     if (visibleCols.has('price_drip')) header.push('掛耳價');
+    if (visibleCols.has('price_shopee_half_pound')) header.push('蝦皮半磅價');
     if (visibleCols.has('price_half_pound')) header.push('半磅價');
     if (visibleCols.has('price_pour_over')) header.push('手沖價');
     if (visibleCols.has('price_syphon')) header.push('虹吸價');
@@ -172,6 +175,7 @@ export default function BeansQueryPage() {
       if (visibleCols.has('processing_plant')) row.push(b.processing_plant || '');
       if (visibleCols.has('flavors')) row.push((b.flavors as string[]).join('、'));
       if (visibleCols.has('price_drip')) row.push(b.price_drip);
+      if (visibleCols.has('price_shopee_half_pound')) row.push(b.price_shopee_half_pound ?? 0);
       if (visibleCols.has('price_half_pound')) row.push(b.price_half_pound);
       if (visibleCols.has('price_pour_over')) row.push(b.price_pour_over);
       if (visibleCols.has('price_syphon')) row.push(b.price_syphon);
@@ -333,6 +337,11 @@ export default function BeansQueryPage() {
                     掛耳<SortIcon k="price_drip" />
                   </th>
                 )}
+                {visibleCols.has('price_shopee_half_pound') && (
+                  <th className="text-right px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark" onClick={() => toggleSort('price_shopee_half_pound')}>
+                    蝦皮半磅<SortIcon k="price_shopee_half_pound" />
+                  </th>
+                )}
                 {visibleCols.has('price_half_pound') && (
                   <th className="text-right px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark" onClick={() => toggleSort('price_half_pound')}>
                     半磅<SortIcon k="price_half_pound" />
@@ -388,6 +397,7 @@ export default function BeansQueryPage() {
                     </td>
                   )}
                   {visibleCols.has('price_drip') && <td className="px-4 py-3 text-right text-cafe-dark">{bean.price_drip}</td>}
+                  {visibleCols.has('price_shopee_half_pound') && <td className="px-4 py-3 text-right text-cafe-dark">{bean.price_shopee_half_pound ?? 0}</td>}
                   {visibleCols.has('price_half_pound') && <td className="px-4 py-3 text-right text-cafe-dark">{bean.price_half_pound}</td>}
                   {visibleCols.has('price_pour_over') && <td className="px-4 py-3 text-right text-cafe-dark">{bean.price_pour_over}</td>}
                   {visibleCols.has('price_syphon') && <td className="px-4 py-3 text-right text-cafe-dark">{bean.price_syphon}</td>}

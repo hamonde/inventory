@@ -21,6 +21,7 @@ export interface Bean {
   processing_plant?: string | null;
   flavors: string[];
   price_drip: number;
+  price_shopee_half_pound: number;
   price_half_pound: number;
   price_pour_over: number;
   price_syphon: number;

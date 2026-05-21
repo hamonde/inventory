@@ -29,6 +29,7 @@ interface BeanFormState {
   processing_plant: string;
   flavors: string[];
   price_drip: string;
+  price_shopee_half_pound: string;
   price_half_pound: string;
   price_pour_over: string;
   price_syphon: string;
@@ -44,6 +45,7 @@ function emptyForm(): BeanFormState {
     processing_plant: '',
     flavors: [],
     price_drip: '',
+    price_shopee_half_pound: '',
     price_half_pound: '',
     price_pour_over: '',
     price_syphon: '',
@@ -113,6 +115,7 @@ export default function BeanCreatePage() {
           processing_plant: item.origins.length === 1 ? (item.processing_plant || null) : null,
           flavors: item.flavors,
           price_drip: Number(item.price_drip) || 0,
+          price_shopee_half_pound: Number(item.price_shopee_half_pound) || 0,
           price_half_pound: Number(item.price_half_pound) || 0,
           price_pour_over: Number(item.price_pour_over) || 0,
           price_syphon: Number(item.price_syphon) || 0,
@@ -283,6 +286,7 @@ export default function BeanCreatePage() {
         <div className="grid grid-cols-2 gap-4">
           {[
             { key: 'price_drip', label: '掛耳價格' },
+            { key: 'price_shopee_half_pound', label: '蝦皮半磅' },
             { key: 'price_half_pound', label: '半磅價格' },
             { key: 'price_pour_over', label: '手沖價格' },
             { key: 'price_syphon', label: '虹吸價格' },
@@ -345,6 +349,7 @@ export default function BeanCreatePage() {
                     processing_plant: form.origins.length === 1 ? (form.processing_plant || null) : null,
                     flavors: form.flavors,
                     price_drip: Number(form.price_drip) || 0,
+                    price_shopee_half_pound: Number(form.price_shopee_half_pound) || 0,
                     price_half_pound: Number(form.price_half_pound) || 0,
                     price_pour_over: Number(form.price_pour_over) || 0,
                     price_syphon: Number(form.price_syphon) || 0,

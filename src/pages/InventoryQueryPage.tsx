@@ -322,6 +322,7 @@ export default function InventoryQueryPage() {
               <div className="grid grid-cols-2 gap-2 mt-1">
                 {[
                   ['掛耳', selectedBean.price_drip],
+                  ['蝦皮半磅', selectedBean.price_shopee_half_pound ?? 0],
                   ['半磅', selectedBean.price_half_pound],
                   ['手沖', selectedBean.price_pour_over],
                   ['虹吸', selectedBean.price_syphon],
