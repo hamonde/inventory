@@ -9,7 +9,6 @@ export type BeanStatus = 'selling' | 'sold_out';
 export interface Origin {
   country: string;
   region?: string | null;
-  estate?: string | null;
 }
 
 export interface Bean {
@@ -19,6 +18,7 @@ export interface Bean {
   process_category: ProcessCategory;
   process_detail?: string | null;
   processing_plant?: string | null;
+  estate?: string | null;
   variety?: string | null;
   grade?: string | null;
   flavors: string[];

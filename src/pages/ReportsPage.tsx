@@ -298,7 +298,7 @@ export default function ReportsPage() {
                 <div>
                   <div className="text-xs text-cafe-muted mb-0.5">產地</div>
                   <div className="text-cafe-dark">
-                    {detailBean.origins.map(o => `${o.country}${o.region ? ` ${o.region}` : ''}${o.estate ? ` ${o.estate}` : ''}`).join('、')}
+                    {detailBean.origins.map(o => `${o.country}${o.region ? ` ${o.region}` : ''}`).join('、')}
                   </div>
                 </div>
                 <div>
@@ -308,6 +308,12 @@ export default function ReportsPage() {
                     {detailBean.process_detail && ` · ${detailBean.process_detail}`}
                   </div>
                 </div>
+                {detailBean.estate && (
+                  <div>
+                    <div className="text-xs text-cafe-muted mb-0.5">莊園</div>
+                    <div className="text-cafe-dark">{detailBean.estate}</div>
+                  </div>
+                )}
                 {detailBean.processing_plant && (
                   <div>
                     <div className="text-xs text-cafe-muted mb-0.5">處理廠</div>

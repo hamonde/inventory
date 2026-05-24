@@ -28,6 +28,7 @@ export default function BeanEditPage() {
   const [processCategory, setProcessCategory] = useState<ProcessCategory | ''>('');
   const [processDetail, setProcessDetail] = useState('');
   const [processingPlant, setProcessingPlant] = useState('');
+  const [estate, setEstate] = useState('');
   const [variety, setVariety] = useState('');
   const [grade, setGrade] = useState('');
   const [flavors, setFlavors] = useState<string[]>([]);
@@ -55,6 +56,7 @@ export default function BeanEditPage() {
         setProcessCategory(b.process_category);
         setProcessDetail(b.process_detail ?? '');
         setProcessingPlant(b.processing_plant ?? '');
+        setEstate(b.estate ?? '');
         setVariety(b.variety ?? '');
         setGrade(b.grade ?? '');
         setFlavors(b.flavors as string[]);
@@ -90,6 +92,7 @@ export default function BeanEditPage() {
       process_category: processCategory,
       process_detail: processDetail || null,
       processing_plant: origins.length === 1 ? (processingPlant || null) : null,
+      estate: estate.trim() || null,
       variety: variety.trim() || null,
       grade: grade.trim() || null,
       flavors,
@@ -144,6 +147,11 @@ export default function BeanEditPage() {
             <Input placeholder="處理廠名稱（選填）" value={processingPlant} onChange={e => setProcessingPlant(e.target.value)} />
           </div>
         )}
+
+        <div>
+          <Label className="mb-2 block">莊園</Label>
+          <Input placeholder="莊園名稱（選填）" value={estate} onChange={e => setEstate(e.target.value)} />
+        </div>
 
         <div>
           <Label className="mb-2 block">名稱 <span className="text-red-500">*</span></Label>

@@ -309,6 +309,12 @@ export default function InventoryQueryPage() {
                   {selectedBean.process_detail || PROCESS_LABEL[selectedBean.process_category]}
                 </span>
               </div>
+              {selectedBean.estate && (
+                <div>
+                  <span className="text-cafe-muted">莊園：</span>
+                  <span className="text-cafe-dark">{selectedBean.estate}</span>
+                </div>
+              )}
               {selectedBean.processing_plant && (
                 <div>
                   <span className="text-cafe-muted">處理廠：</span>

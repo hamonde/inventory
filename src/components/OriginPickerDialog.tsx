@@ -7,7 +7,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { formatOrigin } from '@/lib/origin';
-import type { Country, Region, Estate, Origin } from '@/types';
+import type { Country, Region, Origin } from '@/types';
 
 interface OriginPickerDialogProps {
   open: boolean;
@@ -18,29 +18,20 @@ interface OriginPickerDialogProps {
 
 const CONTINENTS = ['非洲', '中南美洲', '亞洲', '其他'] as const;
 
-/* 步驟：洲別/國家清單 → 產區 → 莊園 */
-type Step = 'continent' | 'region' | 'estate';
-
 export default function OriginPickerDialog({
   open, onOpenChange, selectedOrigins, onChange,
 }: OriginPickerDialogProps) {
   const [countries, setCountries] = useState<Country[]>([]);
   const [regionsMap, setRegionsMap] = useState<Record<number, Region[]>>({});
-  const [estatesMap, setEstatesMap] = useState<Record<number, Estate[]>>({});
 
-  const [step, setStep] = useState<Step>('continent');
   const [activeContinent, setActiveContinent] = useState<string>('非洲');
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
-  const [selectedRegion, setSelectedRegion] = useState<Region | null>(null); // null = 不指定產區（用於 estate step）
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
 
   const [addingRegion, setAddingRegion] = useState(false);
   const [newRegionInput, setNewRegionInput] = useState('');
-
-  const [addingEstate, setAddingEstate] = useState(false);
-  const [newEstateInput, setNewEstateInput] = useState('');
 
   const [addingCountry, setAddingCountry] = useState(false);
   const [newCountryZh, setNewCountryZh] = useState('');
@@ -58,36 +49,22 @@ export default function OriginPickerDialog({
     }
   }, [open]);
 
-  /* ── 選到國家時載入產區 + 莊園 ─────────── */
+  /* ── 選到國家時載入產區 ─────────────────── */
   useEffect(() => {
     if (!selectedCountry) return;
-    if (!regionsMap[selectedCountry.id]) {
-      supabase.from('regions').select('*').eq('country_id', selectedCountry.id).then(({ data }) => {
-        if (data) setRegionsMap(prev => ({ ...prev, [selectedCountry.id]: data as Region[] }));
-      });
-    }
-    if (!estatesMap[selectedCountry.id]) {
-      supabase.from('estates').select('*').eq('country_id', selectedCountry.id).then(({ data }) => {
-        if (data) setEstatesMap(prev => ({ ...prev, [selectedCountry.id]: data as Estate[] }));
-      });
-    }
-  }, [selectedCountry, regionsMap, estatesMap]);
+    if (regionsMap[selectedCountry.id]) return;
+    supabase.from('regions').select('*').eq('country_id', selectedCountry.id).then(({ data }) => {
+      if (data) setRegionsMap(prev => ({ ...prev, [selectedCountry.id]: data as Region[] }));
+    });
+  }, [selectedCountry, regionsMap]);
 
   const countryRegions = selectedCountry ? (regionsMap[selectedCountry.id] ?? []) : [];
 
-  /* 莊園清單：若有選產區，篩出該產區的或未綁定產區的；否則顯示全部國家的莊園 */
-  const filteredEstates = useMemo(() => {
-    if (!selectedCountry) return [];
-    const all = estatesMap[selectedCountry.id] ?? [];
-    if (!selectedRegion) return all;
-    return all.filter(e => e.region_id === selectedRegion.id || e.region_id == null);
-  }, [estatesMap, selectedCountry, selectedRegion]);
-
-  /* ── 搜尋（同時搜國家、產區、莊園） ─────── */
+  /* ── 搜尋（國家 + 產區） ────────────────── */
   const searchResults = useMemo(() => {
     if (!searchText.trim()) return [];
     const q = searchText.trim().toLowerCase();
-    const results: { country: Country; region?: Region; estate?: Estate }[] = [];
+    const results: { country: Country; region?: Region }[] = [];
     for (const c of countries) {
       if (c.name_zh.includes(q) || (c.name_en ?? '').toLowerCase().includes(q)) {
         results.push({ country: c });
@@ -95,65 +72,40 @@ export default function OriginPickerDialog({
       for (const r of regionsMap[c.id] ?? []) {
         if (r.name_zh.includes(q)) results.push({ country: c, region: r });
       }
-      for (const e of estatesMap[c.id] ?? []) {
-        if (e.name_zh.includes(q)) {
-          const r = e.region_id ? (regionsMap[c.id] ?? []).find(x => x.id === e.region_id) : undefined;
-          results.push({ country: c, region: r, estate: e });
-        }
-      }
     }
     return results.slice(0, 30);
-  }, [searchText, countries, regionsMap, estatesMap]);
+  }, [searchText, countries, regionsMap]);
 
-  /* 預載所有產區與莊園（搜尋模式啟動時） */
+  /* 預載所有產區（搜尋模式啟動時） */
   useEffect(() => {
     if (!searchOpen || countries.length === 0) return;
-    const missing = countries.filter(c => !regionsMap[c.id] || !estatesMap[c.id]);
+    const missing = countries.filter(c => !regionsMap[c.id]);
     if (missing.length === 0) return;
     Promise.all(
-      missing.map(c => Promise.all([
-        supabase.from('regions').select('*').eq('country_id', c.id),
-        supabase.from('estates').select('*').eq('country_id', c.id),
-      ]).then(([rRes, eRes]) => ({
-        id: c.id,
-        regions: (rRes.data ?? []) as Region[],
-        estates: (eRes.data ?? []) as Estate[],
-      })))
+      missing.map(c =>
+        supabase.from('regions').select('*').eq('country_id', c.id).then(({ data }) =>
+          data ? { id: c.id, regions: data as Region[] } : null
+        )
+      )
     ).then(results => {
       setRegionsMap(prev => {
         const next = { ...prev };
-        results.forEach(r => { if (!next[r.id]) next[r.id] = r.regions; });
-        return next;
-      });
-      setEstatesMap(prev => {
-        const next = { ...prev };
-        results.forEach(r => { if (!next[r.id]) next[r.id] = r.estates; });
+        results.forEach(r => { if (r) next[r.id] = r.regions; });
         return next;
       });
     });
-  }, [searchOpen, countries, regionsMap, estatesMap]);
+  }, [searchOpen, countries, regionsMap]);
 
   /* ── 已選判斷與寫入 ─────────────────────── */
-  const isAlreadyAdded = (country: string, region?: string | null, estate?: string | null) =>
-    selectedOrigins.some(o =>
-      o.country === country &&
-      (o.region ?? null) === (region ?? null) &&
-      (o.estate ?? null) === (estate ?? null)
-    );
+  const isAlreadyAdded = (country: string, region?: string | null) =>
+    selectedOrigins.some(o => o.country === country && (o.region ?? null) === (region ?? null));
 
-  const addOrigin = (country: Country, region?: Region | null, estate?: Estate | null) => {
-    const origin: Origin = {
-      country: country.name_zh,
-      region: region?.name_zh ?? null,
-      estate: estate?.name_zh ?? null,
-    };
-    if (isAlreadyAdded(origin.country, origin.region, origin.estate)) return;
+  const addOrigin = (country: Country, region?: Region | null) => {
+    const origin: Origin = { country: country.name_zh, region: region?.name_zh ?? null };
+    if (isAlreadyAdded(origin.country, origin.region)) return;
     onChange([...selectedOrigins, origin]);
-    setValidationError(''); // 加入後清掉錯誤訊息
-    // 寫入後回到第一步
-    setStep('continent');
+    setValidationError('');
     setSelectedCountry(null);
-    setSelectedRegion(null);
   };
 
   const removeOrigin = (idx: number) => {
@@ -174,40 +126,10 @@ export default function OriginPickerDialog({
         ...prev,
         [selectedCountry.id]: [...(prev[selectedCountry.id] ?? []), newRegion],
       }));
-      // 新增成功後直接帶入莊園頁
-      setSelectedRegion(newRegion);
-      setStep('estate');
+      addOrigin(selectedCountry, newRegion);
     }
     setNewRegionInput('');
     setAddingRegion(false);
-  };
-
-  /* ── 新增莊園 ───────────────────────────── */
-  const addNewEstate = async () => {
-    if (!newEstateInput.trim() || !selectedCountry) return;
-    const { data, error } = await supabase
-      .from('estates')
-      .insert({
-        country_id: selectedCountry.id,
-        region_id: selectedRegion?.id ?? null,
-        name_zh: newEstateInput.trim(),
-      })
-      .select()
-      .single();
-    if (error || !data) {
-      setValidationError(error?.message ? `新增莊園失敗：${error.message}` : '新增莊園失敗');
-      setTimeout(() => setValidationError(''), 4000);
-      return;
-    }
-    const newEstate = data as Estate;
-    setEstatesMap(prev => ({
-      ...prev,
-      [selectedCountry.id]: [...(prev[selectedCountry.id] ?? []), newEstate],
-    }));
-    // 新增完直接加入這個產地
-    addOrigin(selectedCountry, selectedRegion, newEstate);
-    setNewEstateInput('');
-    setAddingEstate(false);
   };
 
   /* ── 新增國家 ───────────────────────────── */
@@ -240,25 +162,18 @@ export default function OriginPickerDialog({
 
   /* ── 確認 / 關閉 ────────────────────────── */
   const handleConfirm = () => {
-    // 若使用者正在國家或產區頁面（已選國家但還沒按「+ 加入」），按確定時自動把目前選擇加入清單
+    // 若使用者已選國家但還沒按「+ 加入」，按確定時自動把目前國家加入
     let workingOrigins = selectedOrigins;
     if (selectedCountry) {
-      const tentative: Origin = {
-        country: selectedCountry.name_zh,
-        region: selectedRegion?.name_zh ?? null,
-        estate: null,
-      };
-      const alreadyExists = workingOrigins.some(o =>
-        o.country === tentative.country &&
-        (o.region ?? null) === tentative.region &&
-        (o.estate ?? null) === tentative.estate
+      const tentative: Origin = { country: selectedCountry.name_zh, region: null };
+      const exists = workingOrigins.some(o =>
+        o.country === tentative.country && (o.region ?? null) === tentative.region
       );
-      if (!alreadyExists) {
+      if (!exists) {
         workingOrigins = [...workingOrigins, tentative];
         onChange(workingOrigins);
       }
     }
-
     if (workingOrigins.length === 0) {
       setValidationError('請至少選擇一個產地');
       return;
@@ -269,52 +184,30 @@ export default function OriginPickerDialog({
 
   const handleOpenChange = (val: boolean) => {
     if (!val) {
-      setStep('continent');
       setSelectedCountry(null);
-      setSelectedRegion(null);
       setSearchOpen(false);
       setSearchText('');
       setValidationError('');
       setAddingRegion(false);
-      setAddingEstate(false);
       setAddingCountry(false);
       setNewCountryZh('');
       setNewCountryEn('');
       setNewRegionInput('');
-      setNewEstateInput('');
     }
     onOpenChange(val);
   };
 
   const continentCountries = countries.filter(c => c.continent === activeContinent);
 
-  /* ── 標題（含返回按鈕） ─────────────────── */
-  const titleContent = (() => {
-    if (step === 'continent') return <>選擇產地</>;
-    if (step === 'region' && selectedCountry) {
-      return (
-        <button
-          className="flex items-center gap-1 text-cafe-dark hover:text-cafe-primary"
-          onClick={() => { setStep('continent'); setSelectedCountry(null); setSelectedRegion(null); setAddingRegion(false); }}
-        >
-          <ChevronLeft className="h-5 w-5" />
-          {selectedCountry.name_zh}
-        </button>
-      );
-    }
-    if (step === 'estate' && selectedCountry) {
-      return (
-        <button
-          className="flex items-center gap-1 text-cafe-dark hover:text-cafe-primary"
-          onClick={() => { setStep('region'); setSelectedRegion(null); setAddingEstate(false); }}
-        >
-          <ChevronLeft className="h-5 w-5" />
-          {selectedCountry.name_zh}{selectedRegion ? ` · ${selectedRegion.name_zh}` : ''}
-        </button>
-      );
-    }
-    return null;
-  })();
+  const titleContent = selectedCountry ? (
+    <button
+      className="flex items-center gap-1 text-cafe-dark hover:text-cafe-primary"
+      onClick={() => { setSelectedCountry(null); setAddingRegion(false); }}
+    >
+      <ChevronLeft className="h-5 w-5" />
+      {selectedCountry.name_zh}
+    </button>
+  ) : '選擇產地';
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -322,7 +215,7 @@ export default function OriginPickerDialog({
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-cafe-border shrink-0">
           <div className="flex items-center justify-between">
             <DialogTitle>{titleContent}</DialogTitle>
-            {step === 'continent' && (
+            {!selectedCountry && (
               <button
                 onClick={() => { setSearchOpen(v => !v); setSearchText(''); }}
                 className="p-2 mr-8 text-cafe-muted hover:text-cafe-dark rounded-lg"
@@ -332,10 +225,10 @@ export default function OriginPickerDialog({
               </button>
             )}
           </div>
-          {searchOpen && step === 'continent' && (
+          {searchOpen && !selectedCountry && (
             <Input
               autoFocus
-              placeholder="搜尋國家、產區或莊園…"
+              placeholder="搜尋國家或產區…"
               value={searchText}
               onChange={e => setSearchText(e.target.value)}
               className="mt-2"
@@ -373,15 +266,15 @@ export default function OriginPickerDialog({
           {searchOpen && searchText.trim() ? (
             <div className="flex flex-col gap-1">
               {searchResults.length === 0 ? (
-                <div className="text-sm text-cafe-muted text-center py-4">找不到符合的國家、產區或莊園</div>
+                <div className="text-sm text-cafe-muted text-center py-4">找不到符合的國家或產區</div>
               ) : searchResults.map((r, i) => {
-                const already = isAlreadyAdded(r.country.name_zh, r.region?.name_zh, r.estate?.name_zh);
-                const label = `${r.country.name_zh}${r.region ? ' · ' + r.region.name_zh : ''}${r.estate ? ' · ' + r.estate.name_zh : ''}`;
+                const already = isAlreadyAdded(r.country.name_zh, r.region?.name_zh);
+                const label = `${r.country.name_zh}${r.region ? ' · ' + r.region.name_zh : ''}`;
                 return (
                   <button
                     key={i}
                     disabled={already}
-                    onClick={() => { addOrigin(r.country, r.region, r.estate); setSearchText(''); setSearchOpen(false); }}
+                    onClick={() => { addOrigin(r.country, r.region); setSearchText(''); setSearchOpen(false); }}
                     className={`flex items-center justify-between px-4 py-2.5 rounded-lg text-sm text-left transition-colors ${
                       already
                         ? 'bg-cafe-bg/20 text-cafe-muted cursor-not-allowed'
@@ -394,47 +287,45 @@ export default function OriginPickerDialog({
                 );
               })}
             </div>
-          ) : step === 'region' && selectedCountry ? (
+          ) : selectedCountry ? (
             /* ───── 產區選擇 ───── */
             <div className="flex flex-col gap-2">
-              {/* 加入此國家、不指定產區與莊園 */}
               <button
-                disabled={isAlreadyAdded(selectedCountry.name_zh, null, null)}
+                disabled={isAlreadyAdded(selectedCountry.name_zh, null)}
                 onClick={() => addOrigin(selectedCountry)}
                 className={`px-4 py-3 rounded-lg text-sm text-left font-medium transition-colors border ${
-                  isAlreadyAdded(selectedCountry.name_zh, null, null)
+                  isAlreadyAdded(selectedCountry.name_zh, null)
                     ? 'border-cafe-border text-cafe-muted bg-cafe-bg/20 cursor-not-allowed'
                     : 'border-cafe-primary text-cafe-primary bg-cafe-primary/5 hover:bg-cafe-primary/10'
                 }`}
               >
-                + 加入此國家（不指定產區與莊園）
-                {isAlreadyAdded(selectedCountry.name_zh, null, null) && <span className="ml-2 text-xs">已選</span>}
+                + 加入此國家（不指定產區）
+                {isAlreadyAdded(selectedCountry.name_zh, null) && <span className="ml-2 text-xs">已選</span>}
               </button>
 
-              {/* 略過產區，直接選莊園 */}
-              <button
-                onClick={() => { setSelectedRegion(null); setStep('estate'); }}
-                className="px-4 py-3 rounded-lg text-sm text-left font-medium transition-colors border border-cafe-border bg-cafe-cream text-cafe-dark hover:bg-cafe-border/40"
-              >
-                略過產區，直接選莊園 →
-              </button>
-
-              {/* 產區列表 */}
               {countryRegions.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-1">
-                  {countryRegions.map(r => (
-                    <button
-                      key={r.id}
-                      onClick={() => { setSelectedRegion(r); setStep('estate'); }}
-                      className="px-3 py-2 rounded-lg text-sm transition-colors bg-cafe-cream border border-cafe-border text-cafe-dark hover:bg-cafe-border/40"
-                    >
-                      {r.name_zh} →
-                    </button>
-                  ))}
+                  {countryRegions.map(r => {
+                    const already = isAlreadyAdded(selectedCountry.name_zh, r.name_zh);
+                    return (
+                      <button
+                        key={r.id}
+                        disabled={already}
+                        onClick={() => addOrigin(selectedCountry, r)}
+                        className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                          already
+                            ? 'bg-cafe-bg/30 text-cafe-muted cursor-not-allowed'
+                            : 'bg-cafe-cream border border-cafe-border text-cafe-dark hover:bg-cafe-border/40'
+                        }`}
+                      >
+                        {r.name_zh}
+                        {already && ' ✓'}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
-              {/* 新增產區 */}
               {addingRegion ? (
                 <div className="flex gap-2 mt-1">
                   <Input
@@ -453,69 +344,6 @@ export default function OriginPickerDialog({
                   onClick={() => setAddingRegion(true)}
                 >
                   <Plus className="h-3.5 w-3.5 inline mr-1" />新增產區
-                </button>
-              )}
-            </div>
-          ) : step === 'estate' && selectedCountry ? (
-            /* ───── 莊園選擇 ───── */
-            <div className="flex flex-col gap-2">
-              {/* 加入此產地、不指定莊園 */}
-              <button
-                disabled={isAlreadyAdded(selectedCountry.name_zh, selectedRegion?.name_zh ?? null, null)}
-                onClick={() => addOrigin(selectedCountry, selectedRegion)}
-                className={`px-4 py-3 rounded-lg text-sm text-left font-medium transition-colors border ${
-                  isAlreadyAdded(selectedCountry.name_zh, selectedRegion?.name_zh ?? null, null)
-                    ? 'border-cafe-border text-cafe-muted bg-cafe-bg/20 cursor-not-allowed'
-                    : 'border-cafe-primary text-cafe-primary bg-cafe-primary/5 hover:bg-cafe-primary/10'
-                }`}
-              >
-                + 加入此產地（不指定莊園）
-                {isAlreadyAdded(selectedCountry.name_zh, selectedRegion?.name_zh ?? null, null) && <span className="ml-2 text-xs">已選</span>}
-              </button>
-
-              {/* 莊園列表 */}
-              {filteredEstates.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {filteredEstates.map(e => {
-                    const already = isAlreadyAdded(selectedCountry.name_zh, selectedRegion?.name_zh ?? null, e.name_zh);
-                    return (
-                      <button
-                        key={e.id}
-                        disabled={already}
-                        onClick={() => addOrigin(selectedCountry, selectedRegion, e)}
-                        className={`px-3 py-2 rounded-lg text-sm transition-colors ${
-                          already
-                            ? 'bg-cafe-bg/30 text-cafe-muted cursor-not-allowed'
-                            : 'bg-cafe-cream border border-cafe-border text-cafe-dark hover:bg-cafe-border/40'
-                        }`}
-                      >
-                        {e.name_zh}
-                        {already && ' ✓'}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* 新增莊園 */}
-              {addingEstate ? (
-                <div className="flex gap-2 mt-1">
-                  <Input
-                    autoFocus
-                    placeholder="新莊園名稱"
-                    value={newEstateInput}
-                    onChange={e => setNewEstateInput(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && addNewEstate()}
-                  />
-                  <Button size="sm" onClick={addNewEstate} disabled={!newEstateInput.trim()}>新增</Button>
-                  <Button size="sm" variant="outline" onClick={() => { setAddingEstate(false); setNewEstateInput(''); }}>取消</Button>
-                </div>
-              ) : (
-                <button
-                  className="text-sm text-cafe-primary hover:underline text-left mt-1"
-                  onClick={() => setAddingEstate(true)}
-                >
-                  <Plus className="h-3.5 w-3.5 inline mr-1" />新增莊園
                 </button>
               )}
             </div>
@@ -541,7 +369,7 @@ export default function OriginPickerDialog({
                 {continentCountries.map(c => (
                   <button
                     key={c.id}
-                    onClick={() => { setSelectedCountry(c); setStep('region'); }}
+                    onClick={() => setSelectedCountry(c)}
                     className="px-4 py-3 rounded-lg text-sm text-left bg-cafe-cream border border-cafe-border text-cafe-dark hover:bg-cafe-border/30 transition-colors"
                   >
                     <div className="font-medium">{c.name_zh}</div>

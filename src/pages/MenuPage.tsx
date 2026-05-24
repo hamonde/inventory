@@ -19,7 +19,7 @@ function originLine(bean: Bean): string {
   if (bean.origins.length === 0) return proc;
   if (bean.origins.length === 1) {
     const o = bean.origins[0];
-    const place = `${o.country}${o.region ? ' ' + o.region : ''}${o.estate ? ' ' + o.estate : ''}`;
+    const place = `${o.country}${o.region ? ' ' + o.region : ''}${bean.estate ? ' ' + bean.estate : ''}`;
     return `${place} · ${proc}`;
   }
   // 配方豆：只列國家，頓號連接

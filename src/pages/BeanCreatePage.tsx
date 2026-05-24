@@ -27,6 +27,7 @@ interface BeanFormState {
   process_category: ProcessCategory | '';
   process_detail: string;
   processing_plant: string;
+  estate: string;
   variety: string;
   grade: string;
   flavors: string[];
@@ -45,6 +46,7 @@ function emptyForm(): BeanFormState {
     process_category: '',
     process_detail: '',
     processing_plant: '',
+    estate: '',
     variety: '',
     grade: '',
     flavors: [],
@@ -117,6 +119,7 @@ export default function BeanCreatePage() {
           process_category: process_category as ProcessCategory,
           process_detail: process_detail || null,
           processing_plant: item.origins.length === 1 ? (item.processing_plant || null) : null,
+          estate: item.estate.trim() || null,
           variety: item.variety.trim() || null,
           grade: item.grade.trim() || null,
           flavors: item.flavors,
@@ -212,6 +215,16 @@ export default function BeanCreatePage() {
             />
           </div>
         )}
+
+        {/* Estate */}
+        <div>
+          <Label className="mb-2 block">莊園</Label>
+          <Input
+            placeholder="莊園名稱（選填）"
+            value={form.estate}
+            onChange={e => setForm(f => ({ ...f, estate: e.target.value }))}
+          />
+        </div>
 
         {/* Name */}
         <div>
@@ -373,6 +386,7 @@ export default function BeanCreatePage() {
                     process_category: form.process_category as ProcessCategory,
                     process_detail: process_detail || null,
                     processing_plant: form.origins.length === 1 ? (form.processing_plant || null) : null,
+                    estate: form.estate.trim() || null,
                     variety: form.variety.trim() || null,
                     grade: form.grade.trim() || null,
                     flavors: form.flavors,

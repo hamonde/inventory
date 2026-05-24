@@ -26,6 +26,7 @@ const STATUS_LABEL: Record<BeanStatus, string> = {
 
 const OPTIONAL_COLS = [
   { key: 'origins', label: '產地' },
+  { key: 'estate', label: '莊園' },
   { key: 'processing_plant', label: '處理廠' },
   { key: 'variety', label: '品種' },
   { key: 'grade', label: '等級' },
@@ -42,7 +43,7 @@ type OptColKey = typeof OPTIONAL_COLS[number]['key'];
 const ALL_COL_KEYS: OptColKey[] = OPTIONAL_COLS.map(c => c.key);
 
 type SortKey =
-  | 'name' | 'status' | 'origins' | 'processing_plant' | 'variety' | 'grade' | 'process'
+  | 'name' | 'status' | 'origins' | 'estate' | 'processing_plant' | 'variety' | 'grade' | 'process'
   | 'price_drip' | 'price_shopee_half_pound' | 'price_half_pound' | 'price_pour_over' | 'price_syphon';
 type SortDir = 'asc' | 'desc';
 
@@ -111,6 +112,7 @@ export default function BeansQueryPage() {
         const bx = b.process_detail || PROCESS_LABEL[b.process_category];
         return cmpStr(ax, bx);
       }
+      case 'estate': return cmpStr(a.estate ?? '', b.estate ?? '');
       case 'processing_plant': return cmpStr(a.processing_plant ?? '', b.processing_plant ?? '');
       case 'variety': return cmpStr(a.variety ?? '', b.variety ?? '');
       case 'grade': return cmpStr(a.grade ?? '', b.grade ?? '');
@@ -163,6 +165,7 @@ export default function BeansQueryPage() {
     }
     const header = ['名稱', '狀態'];
     if (visibleCols.has('origins')) header.push('產地');
+    if (visibleCols.has('estate')) header.push('莊園');
     if (visibleCols.has('processing_plant')) header.push('處理廠');
     if (visibleCols.has('variety')) header.push('品種');
     if (visibleCols.has('grade')) header.push('等級');
@@ -177,6 +180,7 @@ export default function BeansQueryPage() {
     const rows = sorted.map(b => {
       const row: (string | number)[] = [b.name, STATUS_LABEL[b.status]];
       if (visibleCols.has('origins')) row.push(formatOrigins(b.origins));
+      if (visibleCols.has('estate')) row.push(b.estate || '');
       if (visibleCols.has('processing_plant')) row.push(b.processing_plant || '');
       if (visibleCols.has('variety')) row.push(b.variety || '');
       if (visibleCols.has('grade')) row.push(b.grade || '');
@@ -329,6 +333,11 @@ export default function BeansQueryPage() {
                     產地<SortIcon k="origins" />
                   </th>
                 )}
+                {visibleCols.has('estate') && (
+                  <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('estate')}>
+                    莊園<SortIcon k="estate" />
+                  </th>
+                )}
                 {visibleCols.has('processing_plant') && (
                   <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('processing_plant')}>
                     處理廠<SortIcon k="processing_plant" />
@@ -391,6 +400,9 @@ export default function BeansQueryPage() {
                     <td className="px-4 py-3 text-cafe-muted">
                       {formatOrigins(bean.origins)}
                     </td>
+                  )}
+                  {visibleCols.has('estate') && (
+                    <td className="px-4 py-3 text-cafe-muted">{bean.estate || '—'}</td>
                   )}
                   {visibleCols.has('processing_plant') && (
                     <td className="px-4 py-3 text-cafe-muted">{bean.processing_plant || '—'}</td>
