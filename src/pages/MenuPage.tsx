@@ -126,8 +126,8 @@ export default function MenuPage() {
                 <Coffee className="h-8 w-8" style={{ color: '#FBF8F2' }} />
               </div>
               <div
-                className="text-2xl font-semibold"
-                style={{ color: '#3D2817', letterSpacing: '0.15em' }}
+                className="text-[22px] font-semibold whitespace-nowrap"
+                style={{ color: '#3D2817', letterSpacing: '0.1em' }}
               >
                 HAMONDE CAFE
               </div>

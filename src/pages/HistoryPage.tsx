@@ -81,15 +81,24 @@ export default function HistoryPage() {
   // 資料
   const [txs, setTxs]     = useState<InventoryTransaction[]>([]);
   const [beans, setBeans] = useState<Bean[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       supabase.from('inventory_transactions').select('*').order('transaction_date', { ascending: false }),
       supabase.from('beans').select('*'),        // 含已軟刪除
-    ]).then(([{ data: t }, { data: b }]) => {
+      supabase.from('profiles').select('id, display_name'),
+    ]).then(([{ data: t }, { data: b }, { data: p }]) => {
       if (t) setTxs(t as InventoryTransaction[]);
       if (b) setBeans(b as Bean[]);
+      if (p) {
+        const m: Record<string, string> = {};
+        (p as { id: string; display_name: string | null }[]).forEach(r => {
+          if (r.display_name) m[r.id] = r.display_name;
+        });
+        setProfiles(m);
+      }
       setLoading(false);
     });
   }, []);
@@ -99,6 +108,13 @@ export default function HistoryPage() {
     beans.forEach(b => { m[b.id] = b; });
     return m;
   }, [beans]);
+
+  // 操作員工名稱：優先用 profiles 對照表，找不到才用代號
+  const operatorName = (operatorId: string): string => {
+    if (profiles[operatorId]) return profiles[operatorId];
+    if (operatorId === user?.id) return user.email?.split('@')[0] ?? operatorId.slice(0, 8);
+    return operatorId.slice(0, 8);
+  };
 
   // 篩選邏輯
   const filtered = useMemo(() => {
@@ -169,7 +185,7 @@ export default function HistoryPage() {
       tx.qty_half_pound,
       tx.qty_150g,
       tx.note ?? '',
-      tx.operator_id === user?.id ? (user.email?.split('@')[0] ?? tx.operator_id.slice(0,8)) : tx.operator_id.slice(0,8),
+      operatorName(tx.operator_id),
       format(parseISO(tx.created_at), 'yyyy/MM/dd HH:mm:ss'),
     ]);
     const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
@@ -341,9 +357,6 @@ export default function HistoryPage() {
                   const qty = qtyDisplay(tx);
                   const chip = TX_CHIP[tx.transaction_type];
                   const typeLabel = TX_TYPES.find(t => t.key === tx.transaction_type)?.label ?? tx.transaction_type;
-                  const operatorName = tx.operator_id === user?.id
-                    ? (user.email?.split('@')[0] ?? tx.operator_id.slice(0, 8))
-                    : tx.operator_id.slice(0, 8);
 
                   return (
                     <tr key={tx.id} className={`border-b border-cafe-border/50 ${i % 2 === 1 ? 'bg-cafe-bg/10' : ''}`}>
@@ -370,7 +383,7 @@ export default function HistoryPage() {
                         {qty.text}
                       </td>
                       <td className="px-4 py-3 text-cafe-muted max-w-[160px] truncate">{tx.note || '—'}</td>
-                      <td className="px-4 py-3 text-cafe-muted whitespace-nowrap">{operatorName}</td>
+                      <td className="px-4 py-3 text-cafe-muted whitespace-nowrap">{operatorName(tx.operator_id)}</td>
                     </tr>
                   );
                 })}
