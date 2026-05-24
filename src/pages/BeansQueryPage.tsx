@@ -55,7 +55,7 @@ export default function BeansQueryPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | BeanStatus>('selling');
   const [processFilter, setProcessFilter] = useState<'all' | ProcessCategory>('all');
-  const [visibleCols, setVisibleCols] = useState<Set<OptColKey>>(new Set(['origins', 'processing_plant', 'variety', 'grade', 'process', 'price_half_pound']));
+  const [visibleCols, setVisibleCols] = useState<Set<OptColKey>>(new Set(['origins', 'process', 'flavors', 'price_half_pound', 'price_pour_over']));
   const [deleteTarget, setDeleteTarget] = useState<Bean | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('price_half_pound');

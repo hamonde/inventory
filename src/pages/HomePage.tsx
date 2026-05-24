@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ArrowLeftRight, List, PlusCircle, AlertTriangle, Clock, CircleCheck, History, Coins, PackageOpen, BarChart2, ClipboardList, PackageX } from 'lucide-react';
+import { Search, ArrowLeftRight, List, PlusCircle, AlertTriangle, Clock, CircleCheck, History, Coins, PackageOpen, BarChart2, ClipboardList, PackageX, ListChecks } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { calcFreshnessStats, calcLowStockCount } from '@/lib/inventory';
 import QuickSellDialog from '@/components/QuickSellDialog';
@@ -163,12 +163,13 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* Secondary: History / Reports / Inventory Check */}
-      <div className="mt-4 grid grid-cols-3 gap-2">
+      {/* Secondary: History / Reports / Inventory Check / Menu */}
+      <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
         {[
           { icon: History, label: '歷史紀錄', path: '/history' },
           { icon: BarChart2, label: '消耗報表', path: '/reports' },
           { icon: ClipboardList, label: '盤點', path: '/inventory-check' },
+          { icon: ListChecks, label: '現貨目錄', path: '/menu' },
         ].map(({ icon: Icon, label, path }) => (
           <button
             key={path}

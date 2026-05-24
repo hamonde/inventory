@@ -13,6 +13,7 @@ import BeanEditPage from '@/pages/BeanEditPage';
 import HistoryPage from '@/pages/HistoryPage';
 import ReportsPage from '@/pages/ReportsPage';
 import InventoryCheckPage from '@/pages/InventoryCheckPage';
+import MenuPage from '@/pages/MenuPage';
 
 // Vite 把 BASE_URL 設成 '/inventory/'，BrowserRouter 的 basename 需要不含結尾斜線
 const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -35,6 +36,7 @@ export default function App() {
               <Route path="/history" element={<HistoryPage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/inventory-check" element={<InventoryCheckPage />} />
+              <Route path="/menu" element={<MenuPage />} />
             </Route>
           </Routes>
         </ToastProvider>
