@@ -141,16 +141,17 @@ export default function BeanEditPage() {
           </Button>
         </div>
 
-        {origins.length === 1 && (
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label className="mb-2 block">處理廠</Label>
-            <Input placeholder="處理廠名稱（選填）" value={processingPlant} onChange={e => setProcessingPlant(e.target.value)} />
+            <Label className="mb-2 block">莊園</Label>
+            <Input placeholder="莊園名稱（選填）" value={estate} onChange={e => setEstate(e.target.value)} />
           </div>
-        )}
-
-        <div>
-          <Label className="mb-2 block">莊園</Label>
-          <Input placeholder="莊園名稱（選填）" value={estate} onChange={e => setEstate(e.target.value)} />
+          {origins.length === 1 && (
+            <div>
+              <Label className="mb-2 block">處理廠</Label>
+              <Input placeholder="處理廠名稱（選填）" value={processingPlant} onChange={e => setProcessingPlant(e.target.value)} />
+            </div>
+          )}
         </div>
 
         <div>

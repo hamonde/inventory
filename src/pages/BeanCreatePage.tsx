@@ -204,26 +204,26 @@ export default function BeanCreatePage() {
           </Button>
         </div>
 
-        {/* Processing plant — only when single origin */}
-        {form.origins.length === 1 && (
+        {/* Estate（左）+ Processing plant（右，僅單品豆顯示） */}
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label className="mb-2 block">處理廠</Label>
+            <Label className="mb-2 block">莊園</Label>
             <Input
-              placeholder="處理廠名稱（選填）"
-              value={form.processing_plant}
-              onChange={e => setForm(f => ({ ...f, processing_plant: e.target.value }))}
+              placeholder="莊園名稱（選填）"
+              value={form.estate}
+              onChange={e => setForm(f => ({ ...f, estate: e.target.value }))}
             />
           </div>
-        )}
-
-        {/* Estate */}
-        <div>
-          <Label className="mb-2 block">莊園</Label>
-          <Input
-            placeholder="莊園名稱（選填）"
-            value={form.estate}
-            onChange={e => setForm(f => ({ ...f, estate: e.target.value }))}
-          />
+          {form.origins.length === 1 && (
+            <div>
+              <Label className="mb-2 block">處理廠</Label>
+              <Input
+                placeholder="處理廠名稱（選填）"
+                value={form.processing_plant}
+                onChange={e => setForm(f => ({ ...f, processing_plant: e.target.value }))}
+              />
+            </div>
+          )}
         </div>
 
         {/* Name */}
