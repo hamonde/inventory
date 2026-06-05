@@ -1,18 +1,32 @@
 import { useState, useEffect } from 'react';
 import { differenceInDays, parseISO } from 'date-fns';
-import { ChevronLeft, ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronLeft, ChevronUp, ChevronDown, FileText } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { getBatchesForWarehouse, getAllActiveBatches } from '@/lib/inventory';
 import { formatOrigins } from '@/lib/origin';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
-import type { Bean, InventoryTransaction, ProcessCategory } from '@/types';
+import { Button } from '@/components/ui/button';
+import type { Bean, InventoryTransaction, ProcessCategory, TransactionType } from '@/types';
 
 const PROCESS_LABEL: Record<ProcessCategory, string> = {
   sun_dried: '日曬', washed: '水洗', honey: '蜜處理', special: '特殊處理',
 };
+
+const TX_LABEL: Record<TransactionType, string> = {
+  in: '進庫', out: '出庫', sell: '售出', shelf: '上架', return: '回倉', check: '盤點',
+};
+
+/** 該批次的交易數量顯示文字（含正負號或盤點的 —） */
+function batchTxQty(t: InventoryTransaction): string {
+  if (t.transaction_type === 'check') return '—';
+  const n = t.qty_half_pound;
+  if (t.transaction_type === 'in') return `+${n} 包`;
+  if (t.transaction_type === 'out' || t.transaction_type === 'sell') return `-${n} 包`;
+  return `${n} 包`;
+}
 
 type SortKey = 'name' | 'storage' | 'display' | 'total' | 'price_half_pound';
 type SortDir = 'asc' | 'desc';
@@ -116,16 +130,50 @@ export default function InventoryQueryPage() {
   const [batchBean, setBatchBean] = useState<Bean | null>(null);
   const [batchWarehouse, setBatchWarehouse] = useState<'storage' | 'display' | 'total'>('storage');
 
+  // 單一批次的備註彈窗
+  const [batchNotesOpen, setBatchNotesOpen] = useState(false);
+  const [batchNotesTxs, setBatchNotesTxs] = useState<InventoryTransaction[]>([]);
+  const [batchNotesTitle, setBatchNotesTitle] = useState('');
+
+  // 員工名稱對照
+  const [profiles, setProfiles] = useState<Record<string, string>>({});
+
   useEffect(() => {
     Promise.all([
       supabase.from('beans').select('*').is('deleted_at', null).order('name'),
       supabase.from('inventory_transactions').select('*'),
-    ]).then(([{ data: b }, { data: t }]) => {
+      supabase.from('profiles').select('id, display_name'),
+    ]).then(([{ data: b }, { data: t }, { data: p }]) => {
       if (b) setBeans(b as Bean[]);
       if (t) setAllTx(t as InventoryTransaction[]);
+      if (p) {
+        const m: Record<string, string> = {};
+        (p as { id: string; display_name: string | null }[]).forEach(r => {
+          if (r.display_name) m[r.id] = r.display_name;
+        });
+        setProfiles(m);
+      }
       setLoading(false);
     });
   }, []);
+
+  /** 撈該批次的相關交易紀錄 */
+  const getBatchTxs = (beanId: string, roastDate: string, warehouse: 'storage' | 'display' | 'total') => {
+    return allTx
+      .filter(t =>
+        t.bean_id === beanId &&
+        t.roast_date === roastDate &&
+        (warehouse === 'total' || t.warehouse_from === warehouse || t.warehouse_to === warehouse)
+      )
+      .sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
+  };
+
+  const openBatchNotes = (bean: Bean, roastDate: string) => {
+    const txs = getBatchTxs(bean.id, roastDate, batchWarehouse);
+    setBatchNotesTxs(txs);
+    setBatchNotesTitle(`${bean.name}（烘豆日 ${roastDate.replace(/-/g, '/')}）`);
+    setBatchNotesOpen(true);
+  };
 
   // 計算每個 bean 在目前篩選條件下的數量（非 all 時只加總符合條件的批次）
   const filtered = beans.map(b => ({
@@ -383,11 +431,63 @@ export default function InventoryQueryPage() {
                     </div>
                     <BatchBadge roastDate={b.roastDate} />
                   </div>
-                  <div className="text-lg font-semibold text-cafe-dark">{b.quantity} 包</div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => batchBean && openBatchNotes(batchBean, b.roastDate)}
+                      className="p-1.5 rounded-lg text-cafe-muted hover:text-cafe-primary hover:bg-cafe-bg/40 transition-colors"
+                      title="查看此批次備註"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </button>
+                    <div className="text-lg font-semibold text-cafe-dark">{b.quantity} 包</div>
+                  </div>
                 </div>
               ))}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 批次備註彈窗 */}
+      <Dialog open={batchNotesOpen} onOpenChange={setBatchNotesOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>批次備註 — {batchNotesTitle}</DialogTitle>
+          </DialogHeader>
+          {(() => {
+            const withNotes = batchNotesTxs.filter(t => t.note && t.note.trim());
+            if (withNotes.length === 0) {
+              return (
+                <div className="text-sm text-cafe-muted text-center py-6">
+                  此批次沒有備註紀錄
+                </div>
+              );
+            }
+            return (
+              <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
+                {withNotes.map(t => {
+                  const opName = profiles[t.operator_id] ?? t.operator_id.slice(0, 8);
+                  return (
+                    <div key={t.id} className="bg-cafe-bg/20 rounded-lg px-3 py-2 flex flex-col gap-1">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-cafe-muted">
+                        <span>{t.transaction_date.replace(/-/g, '/')}</span>
+                        <span>·</span>
+                        <span>{TX_LABEL[t.transaction_type]}</span>
+                        <span>{batchTxQty(t)}</span>
+                        <span className="ml-auto">{opName}</span>
+                      </div>
+                      <div className="text-sm text-cafe-dark whitespace-pre-wrap" style={{ lineHeight: 1.6 }}>
+                        {t.note}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBatchNotesOpen(false)}>關閉</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
