@@ -22,9 +22,9 @@ function FreshBadge({ roastDate }: { roastDate: string }) {
       養豆中
     </span>
   );
-  if (days > 90) return (
+  if (days > 180) return (
     <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-cafe-primary text-cafe-cream">
-      滿三個月
+      滿六個月
     </span>
   );
   return (

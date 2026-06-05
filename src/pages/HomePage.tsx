@@ -90,7 +90,7 @@ export default function HomePage() {
                 <AlertTriangle className="h-6 w-6 shrink-0" style={{ color: '#AC6342' }} />
                 <div>
                   <div className="text-2xl font-bold" style={{ color: '#AC6342' }}>{expired}</div>
-                  <div className="text-xs text-cafe-dark mt-0.5">批已滿三個月</div>
+                  <div className="text-xs text-cafe-dark mt-0.5">批已滿六個月</div>
                 </div>
               </button>
 

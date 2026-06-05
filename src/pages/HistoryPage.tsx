@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import NoteCell from '@/components/NoteCell';
 import type { Bean, InventoryTransaction, TransactionType, Warehouse } from '@/types';
 
 // ── 常數 ────────────────────────────────────────────────────
@@ -382,7 +383,23 @@ export default function HistoryPage() {
                       <td className="px-4 py-3 text-right font-semibold whitespace-nowrap" style={{ color: qty.color }}>
                         {qty.text}
                       </td>
-                      <td className="px-4 py-3 text-cafe-muted max-w-[160px] truncate">{tx.note || '—'}</td>
+                      <td className="px-4 py-3">
+                        <NoteCell
+                          note={tx.note}
+                          maxWidthPx={200}
+                          info={{
+                            date: tx.transaction_date,
+                            typeLabel,
+                            qtyText: qty.text === '—' ? '—' : `${qty.text} 包`,
+                            warehouse: warehouseDisplay(tx),
+                            beanName: tx.bean_id === null
+                              ? '—'
+                              : (bean ? `${bean.name}${bean.deleted_at ? '（已刪除）' : ''}` : tx.bean_id.slice(0, 8)),
+                            roastDate: tx.roast_date,
+                            operator: operatorName(tx.operator_id),
+                          }}
+                        />
+                      </td>
                       <td className="px-4 py-3 text-cafe-muted whitespace-nowrap">{operatorName(tx.operator_id)}</td>
                     </tr>
                   );

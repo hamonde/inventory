@@ -33,7 +33,7 @@ export function calcFreshnessStats(
     for (const batch of getAllActiveBatches(transactions, beanId)) {
       const days = differenceInDays(new Date(), parseISO(batch.roastDate));
       if (days <= 10) resting++;
-      else if (days > 90) expired++;
+      else if (days > 180) expired++;
     }
   }
   return { resting, expired };

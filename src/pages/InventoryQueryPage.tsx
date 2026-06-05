@@ -22,7 +22,7 @@ const FRESH_TABS: { key: FreshFilter; label: string }[] = [
   { key: 'all', label: '全部' },
   { key: 'resting', label: '養豆中' },
   { key: 'normal', label: '正常' },
-  { key: 'expired', label: '滿三個月' },
+  { key: 'expired', label: '滿六個月' },
   { key: 'low_stock', label: '低庫存' },
 ];
 
@@ -38,8 +38,8 @@ function BatchBadge({ roastDate }: BatchBadgeProps) {
       </span>
     );
   }
-  if (days > 90) {
-    const overDays = days - 90;
+  if (days > 180) {
+    const overDays = days - 180;
     const months = Math.floor(overDays / 30);
     const remainDays = overDays % 30;
     const overText = months > 0
@@ -47,7 +47,7 @@ function BatchBadge({ roastDate }: BatchBadgeProps) {
       : `${remainDays} 天`;
     return (
       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-cafe-primary text-cafe-cream">
-        滿三個月 已過 {overText}
+        滿六個月 已過 {overText}
       </span>
     );
   }
@@ -63,8 +63,8 @@ function filterBatchesByFreshness(
   return batches.filter(b => {
     const days = differenceInDays(new Date(), parseISO(b.roastDate));
     if (filter === 'resting') return days <= 10;
-    if (filter === 'expired') return days > 90;
-    if (filter === 'normal') return days > 10 && days <= 90;
+    if (filter === 'expired') return days > 180;
+    if (filter === 'normal') return days > 10 && days <= 180;
     return true;
   });
 }
