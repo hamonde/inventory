@@ -423,26 +423,33 @@ export default function InventoryQueryPage() {
                   ? getAllActiveBatches(allTx, batchBean.id)
                   : getBatchesForWarehouse(allTx, batchBean.id, batchWarehouse),
                 freshFilter
-              ).map(b => (
-                <div key={b.roastDate} className="flex items-center justify-between bg-cafe-bg/30 rounded-lg px-3 py-2">
-                  <div>
-                    <div className="text-sm font-medium text-cafe-dark">
-                      烘豆日：{b.roastDate.replace(/-/g, '/')}
+              ).map(b => {
+                const hasNotes = batchBean
+                  ? getBatchTxs(batchBean.id, b.roastDate, batchWarehouse).some(t => t.note && t.note.trim())
+                  : false;
+                return (
+                  <div key={b.roastDate} className="flex items-center justify-between bg-cafe-bg/30 rounded-lg px-3 py-2">
+                    <div>
+                      <div className="text-sm font-medium text-cafe-dark">
+                        烘豆日：{b.roastDate.replace(/-/g, '/')}
+                      </div>
+                      <BatchBadge roastDate={b.roastDate} />
                     </div>
-                    <BatchBadge roastDate={b.roastDate} />
+                    <div className="flex items-center gap-2">
+                      {hasNotes && (
+                        <button
+                          onClick={() => batchBean && openBatchNotes(batchBean, b.roastDate)}
+                          className="p-1.5 rounded-lg text-cafe-muted hover:text-cafe-primary hover:bg-cafe-bg/40 transition-colors"
+                          title="查看此批次備註"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </button>
+                      )}
+                      <div className="text-lg font-semibold text-cafe-dark">{b.quantity} 包</div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => batchBean && openBatchNotes(batchBean, b.roastDate)}
-                      className="p-1.5 rounded-lg text-cafe-muted hover:text-cafe-primary hover:bg-cafe-bg/40 transition-colors"
-                      title="查看此批次備註"
-                    >
-                      <FileText className="h-4 w-4" />
-                    </button>
-                    <div className="text-lg font-semibold text-cafe-dark">{b.quantity} 包</div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </DialogContent>
