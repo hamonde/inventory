@@ -25,6 +25,8 @@ const DRIP_BAG_ITEMS: { dbName: string; displayName: string }[] = [
   { dbName: '莓李剉剉',   displayName: '莓李剉剉' },
   { dbName: '荔香配方',   displayName: '荔香配方' },
   { dbName: '露西藝伎',   displayName: '露西藝伎' },
+  { dbName: '鑽石山',     displayName: '鑽石山' },
+  { dbName: '莫札特',     displayName: '莫札特' },
 ];
 const DRIP_BAG_PRICE = 48;
 
