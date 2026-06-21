@@ -18,12 +18,12 @@ const DRIP_BAG_ITEMS: { dbName: string; displayName: string }[] = [
   { dbName: '天堂鳥',       displayName: '天堂鳥' },
   { dbName: '耶加雪菲G2',   displayName: '耶加雪菲' },
   { dbName: '香水檸檬',     displayName: '香水檸檬' },
-  { dbName: '鳳香配方豆',   displayName: '鳳香配方豆' },
-  { dbName: '桃香配方豆',   displayName: '桃香配方豆' },
+  { dbName: '鳳香配方豆',   displayName: '鳳香配方' },
+  { dbName: '桃香配方豆',   displayName: '桃香配方' },
   { dbName: '粉象',         displayName: '粉象' },
-  { dbName: '白葡萄配方豆', displayName: '白葡萄配方豆' },
+  { dbName: '白葡萄配方豆', displayName: '白葡萄配方' },
   { dbName: '莓李剉剉',     displayName: '莓李剉剉' },
-  { dbName: '荔香配方豆',   displayName: '荔香配方豆' },
+  { dbName: '荔香配方豆',   displayName: '荔香配方' },
   { dbName: '露西藝伎',     displayName: '露西藝伎' },
 ];
 const DRIP_BAG_PRICE = 48;
