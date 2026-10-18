@@ -214,26 +214,26 @@ export default function HistoryPage() {
       <div className="bg-cafe-cream rounded-xl border border-cafe-border p-4 mb-4 flex flex-col gap-4">
         {/* Row 1: dates + bean + warehouse */}
         <div className="flex flex-wrap gap-3 items-end">
-          <div className="flex items-center gap-2">
-            <div>
+          <div className="grid min-w-0 w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+            <div className="min-w-0">
               <div className="text-xs text-cafe-muted mb-1">起始日</div>
               <input
                 type="date"
                 value={dateFrom}
                 max={dateTo}
                 onChange={e => { setDateFrom(e.target.value); setPage(1); }}
-                className="h-11 rounded-lg border border-cafe-border bg-cafe-cream px-3 text-sm text-cafe-dark focus:outline-none focus:ring-2 focus:ring-cafe-primary/50"
+                className="h-11 w-full rounded-lg border border-cafe-border bg-cafe-cream px-3 text-sm text-cafe-dark focus:outline-none focus:ring-2 focus:ring-cafe-primary/50"
               />
             </div>
-            <span className="text-cafe-muted mt-5">—</span>
-            <div>
+            <span className="hidden text-cafe-muted mt-5 sm:block">—</span>
+            <div className="min-w-0">
               <div className="text-xs text-cafe-muted mb-1">結束日</div>
               <input
                 type="date"
                 value={dateTo}
                 min={dateFrom}
                 onChange={e => { setDateTo(e.target.value); setPage(1); }}
-                className="h-11 rounded-lg border border-cafe-border bg-cafe-cream px-3 text-sm text-cafe-dark focus:outline-none focus:ring-2 focus:ring-cafe-primary/50"
+                className="h-11 w-full rounded-lg border border-cafe-border bg-cafe-cream px-3 text-sm text-cafe-dark focus:outline-none focus:ring-2 focus:ring-cafe-primary/50"
               />
             </div>
           </div>
@@ -257,7 +257,7 @@ export default function HistoryPage() {
           {/* Warehouse filter */}
           <div>
             <div className="text-xs text-cafe-muted mb-1">倉庫</div>
-            <div className="flex gap-1.5">
+            <div className="flex flex-wrap gap-1.5">
               {([['all','全部'],['storage','二樓倉庫'],['display','展示櫃']] as [string,string][]).map(([v,l]) => (
                 <button
                   key={v}

@@ -175,22 +175,22 @@ export default function ReportsPage() {
 
         {preset === 'custom' && (
           <div className="flex flex-wrap items-center gap-3 mt-1">
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 w-full items-center gap-2 sm:w-auto">
               <span className="text-sm text-cafe-muted whitespace-nowrap">起始日</span>
               <Input
                 type="date"
                 value={customFrom}
                 onChange={e => setCustomFrom(e.target.value)}
-                className="w-40"
+                className="flex-1 sm:w-40 sm:flex-none"
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 w-full items-center gap-2 sm:w-auto">
               <span className="text-sm text-cafe-muted whitespace-nowrap">結束日</span>
               <Input
                 type="date"
                 value={customTo}
                 onChange={e => setCustomTo(e.target.value)}
-                className="w-40"
+                className="flex-1 sm:w-40 sm:flex-none"
               />
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, Minus, Plus, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -47,12 +47,10 @@ export default function InventoryTransactionPage() {
   const [txType, setTxType] = useState<TransactionType>('in');
   const [txDate, setTxDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [warehouse, setWarehouse] = useState<Warehouse | null>(null);
-  const [beanId, setBeanId] = useState('');
+  const [selectedBeanId, setBeanId] = useState('');
   const [qty, setQty] = useState(1);
-  const [roastDate, setRoastDate] = useState('');
+  const [selectedRoastDate, setRoastDate] = useState('');
   const [note, setNote] = useState('');
-
-  const [batches, setBatches] = useState<{ roastDate: string; quantity: number }[]>([]);
 
   useEffect(() => {
     supabase.from('beans').select('*').eq('status', 'selling').is('deleted_at', null).order('name')
@@ -61,34 +59,38 @@ export default function InventoryTransactionPage() {
       .then(({ data }) => { if (data) setAllTx(data as InventoryTransaction[]); });
   }, []);
 
-  // Recalculate batches when bean/type/warehouse changes
-  useEffect(() => {
-    if (!beanId) { setBatches([]); setRoastDate(''); return; }
-    const wh = getWarehouseForBatch(txType, warehouse);
-    if (!wh) { setBatches([]); setRoastDate(''); return; }
-    const b = getBatchesForWarehouse(allTx, beanId, wh);
-    setBatches(b);
-    setRoastDate(b.length > 0 ? b[0].roastDate : '');
-  }, [beanId, txType, warehouse, allTx]);
+  const sourceWarehouse = getWarehouseForBatch(txType, warehouse);
+  const availableBatches = useMemo(() => {
+    const byBean = new Map<string, { roastDate: string; quantity: number }[]>();
+    if (!sourceWarehouse) return byBean;
+    for (const bean of beans) {
+      // Reserve stock already used by the pending list, before offering it again.
+      const remaining = getBatchesForWarehouse(allTx, bean.id, sourceWarehouse)
+        .map(batch => ({
+          ...batch,
+          quantity: batch.quantity - pending.reduce((sum, tx) => (
+            tx.bean_id === bean.id && tx.roast_date === batch.roastDate &&
+            tx.warehouse_from === sourceWarehouse ? sum + tx.qty_half_pound : sum
+          ), 0),
+        }))
+        .filter(batch => batch.quantity > 0);
+      byBean.set(bean.id, remaining);
+    }
+    return byBean;
+  }, [allTx, beans, pending, sourceWarehouse]);
 
-  // Default warehouse for sell
-  useEffect(() => {
-    if (txType === 'sell' && warehouse === null) setWarehouse('display');
-    if (txType === 'shelf' || txType === 'return') setWarehouse(null);
-  }, [txType]);
+  const selectableBeans = txType === 'in'
+    ? beans
+    : beans.filter(bean => (availableBatches.get(bean.id)?.length ?? 0) > 0);
+  const beanId = selectableBeans.some(bean => bean.id === selectedBeanId) ? selectedBeanId : '';
+  const batches = availableBatches.get(beanId) ?? [];
+  // Keep a valid selection, falling back to the oldest available batch (FIFO).
+  const roastDate = txType === 'in' ? selectedRoastDate
+    : batches.find(batch => batch.roastDate === selectedRoastDate)?.roastDate ?? batches[0]?.roastDate ?? '';
 
-  const pendingDeducted = useCallback((bid: string, rDate: string, wh: Warehouse): number => {
-    return pending.reduce((sum, p) => {
-      if (p.bean_id !== bid || p.roast_date !== rDate) return sum;
-      if (p.warehouse_from === wh) return sum + p.qty_half_pound;
-      return sum;
-    }, 0);
-  }, [pending]);
-
-  const availableQty = useCallback((bid: string, rDate: string, wh: Warehouse): number => {
-    const base = getBatchesForWarehouse(allTx, bid, wh).find(b => b.roastDate === rDate)?.quantity ?? 0;
-    return base - pendingDeducted(bid, rDate, wh);
-  }, [allTx, pendingDeducted]);
+  const availableQty = (bid: string, rDate: string): number => (
+    availableBatches.get(bid)?.find(batch => batch.roastDate === rDate)?.quantity ?? 0
+  );
 
   const buildTx = (): PendingTransaction | null => {
     if (!beanId || !txDate || !roastDate) return null;
@@ -129,19 +131,20 @@ export default function InventoryTransactionPage() {
       if (!warehouse) return false;
     } else if (txType === 'out' || txType === 'sell') {
       if (!warehouse) return false;
-      const avail = availableQty(beanId, roastDate, warehouse);
+      const avail = availableQty(beanId, roastDate);
       if (qty > avail) return false;
     } else if (txType === 'shelf') {
-      const avail = availableQty(beanId, roastDate, 'storage');
+      const avail = availableQty(beanId, roastDate);
       if (qty > avail) return false;
     } else if (txType === 'return') {
-      const avail = availableQty(beanId, roastDate, 'display');
+      const avail = availableQty(beanId, roastDate);
       if (qty > avail) return false;
     }
     return true;
   };
 
   const addToPending = () => {
+    if (!canAdd()) return;
     const tx = buildTx();
     if (!tx) return;
     setPending(prev => [...prev, tx]);
@@ -155,7 +158,8 @@ export default function InventoryTransactionPage() {
     setSaving(true);
     try {
       const rows = pending.map(p => {
-        const { tempId: _, ...rest } = p;
+        const { tempId, ...rest } = p;
+        void tempId;
         return { ...rest, operator_id: user.id };
       });
       const { error } = await supabase.from('inventory_transactions').insert(rows);
@@ -171,12 +175,9 @@ export default function InventoryTransactionPage() {
     }
   };
 
-  const batchLabel = (b: { roastDate: string; quantity: number }) => {
-    const wh = getWarehouseForBatch(txType, warehouse);
-    const deducted = wh ? pendingDeducted(beanId, b.roastDate, wh) : 0;
-    const available = b.quantity - deducted;
-    return `${b.roastDate.replace(/-/g, '/')}（剩 ${available} 包）`;
-  };
+  const batchLabel = (b: { roastDate: string; quantity: number }) => (
+    `${b.roastDate.replace(/-/g, '/')}（剩 ${b.quantity} 包）`
+  );
 
   return (
     <div>
@@ -223,7 +224,7 @@ export default function InventoryTransactionPage() {
               </tbody>
             </table>
           </div>
-          <div className="flex gap-3 mt-4">
+          <div className="flex flex-wrap gap-3 mt-4">
             <Button onClick={saveAll} disabled={saving}>
               {saving ? '儲存中...' : `儲存到資料庫（${pending.length} 筆）`}
             </Button>
@@ -233,7 +234,7 @@ export default function InventoryTransactionPage() {
       )}
 
       {/* Form */}
-      <div className="bg-cafe-cream rounded-xl border border-cafe-border p-6 flex flex-col gap-5">
+      <div className="min-w-0 bg-cafe-cream rounded-xl border border-cafe-border p-4 sm:p-6 flex flex-col gap-5">
 
         {/* Transaction type */}
         <div>
@@ -242,7 +243,7 @@ export default function InventoryTransactionPage() {
             {(['in', 'out', 'sell', 'shelf', 'return'] as TransactionType[]).map(t => (
               <button
                 key={t}
-                onClick={() => { setTxType(t); setWarehouse(t === 'sell' ? 'display' : null); setRoastDate(''); }}
+                onClick={() => { setTxType(t); setWarehouse(t === 'sell' ? 'display' : null); setBeanId(''); setRoastDate(''); }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium min-h-[44px] transition-colors ${txType === t ? 'bg-cafe-primary text-cafe-cream' : 'bg-cafe-bg/40 text-cafe-dark hover:bg-cafe-border'}`}
               >
                 {TYPE_LABEL[t]}
@@ -253,7 +254,7 @@ export default function InventoryTransactionPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Date */}
-          <div>
+          <div className="min-w-0">
             <Label className="mb-2 block">日期 <span className="text-red-500">*</span></Label>
             <Input type="date" value={txDate} onChange={e => setTxDate(e.target.value)} />
           </div>
@@ -268,7 +269,7 @@ export default function InventoryTransactionPage() {
                 {(['storage', 'display'] as Warehouse[]).map(w => (
                   <button
                     key={w}
-                    onClick={() => setWarehouse(w)}
+                    onClick={() => { setWarehouse(w); setBeanId(''); setRoastDate(''); }}
                     className={`flex-1 py-2 rounded-lg text-sm font-medium min-h-[44px] transition-colors ${warehouse === w ? 'bg-cafe-primary text-cafe-cream' : 'bg-cafe-bg/40 text-cafe-dark hover:bg-cafe-border'}`}
                   >
                     {WAREHOUSE_LABEL[w]}
@@ -282,10 +283,10 @@ export default function InventoryTransactionPage() {
         {/* Bean */}
         <div>
           <Label className="mb-2 block">豆名 <span className="text-red-500">*</span></Label>
-          <Select value={beanId} onValueChange={v => { setBeanId(v); setRoastDate(''); }}>
-            <SelectTrigger><SelectValue placeholder="選擇咖啡豆" /></SelectTrigger>
+          <Select value={beanId} onValueChange={v => { setBeanId(v); setRoastDate(''); }} disabled={txType !== 'in' && (!sourceWarehouse || selectableBeans.length === 0)}>
+            <SelectTrigger><SelectValue placeholder={txType !== 'in' && !sourceWarehouse ? '請先選擇倉庫' : txType !== 'in' && selectableBeans.length === 0 ? '此倉庫無可用庫存' : '選擇咖啡豆'} /></SelectTrigger>
             <SelectContent>
-              {beans.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+              {selectableBeans.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -296,7 +297,7 @@ export default function InventoryTransactionPage() {
           {txType === 'in' ? (
             <Input type="date" value={roastDate} onChange={e => setRoastDate(e.target.value)} />
           ) : (
-            <Select value={roastDate} onValueChange={setRoastDate} disabled={!beanId}>
+            <Select value={roastDate} onValueChange={setRoastDate} disabled={!beanId || batches.length === 0}>
               <SelectTrigger>
                 <SelectValue placeholder={batches.length === 0 ? '（無可用批次）' : '選擇烘豆日期'} />
               </SelectTrigger>
@@ -338,7 +339,7 @@ export default function InventoryTransactionPage() {
           {beanId && roastDate && txType !== 'in' && (() => {
             const wh = getWarehouseForBatch(txType, warehouse);
             if (!wh) return null;
-            const avail = availableQty(beanId, roastDate, wh);
+            const avail = availableQty(beanId, roastDate);
             if (qty > avail) return (
               <p className="text-sm text-red-500 mt-1">數量超過庫存（目前剩 {avail} 包）</p>
             );

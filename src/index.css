@@ -30,3 +30,21 @@ body {
 #root {
   min-height: 100vh;
 }
+
+/* iOS date inputs must shrink with their container instead of their native editor. */
+input[type='date'] {
+  min-width: 0;
+  max-width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type='date']::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
+}
+
+input[type='date']::-webkit-datetime-edit {
+  min-width: 0;
+  padding: 0;
+}

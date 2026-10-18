@@ -14,14 +14,14 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      'flex h-11 w-full items-center justify-between rounded-lg border border-cafe-border bg-cafe-cream px-3 py-2 text-sm text-cafe-dark placeholder:text-cafe-muted focus:outline-none focus:ring-2 focus:ring-cafe-primary/50 disabled:cursor-not-allowed disabled:opacity-50',
+      'flex h-11 w-full min-w-0 max-w-full items-center justify-between gap-2 rounded-lg border border-cafe-border bg-cafe-cream px-3 py-2 text-sm text-cafe-dark placeholder:text-cafe-muted focus:outline-none focus:ring-2 focus:ring-cafe-primary/50 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:min-w-0 [&>span]:truncate',
       className
     )}
     {...props}
   >
     {children}
     <SelectPrimitive.Icon asChild>
-      <ChevronDown className="h-4 w-4 text-cafe-muted" />
+      <ChevronDown className="h-4 w-4 shrink-0 text-cafe-muted" />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ));
@@ -35,7 +35,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        'relative z-50 max-h-60 min-w-[8rem] overflow-hidden rounded-lg border border-cafe-border bg-cafe-cream shadow-md',
+        'relative z-50 max-h-60 min-w-[8rem] max-w-[var(--radix-select-content-available-width)] overflow-hidden rounded-lg border border-cafe-border bg-cafe-cream shadow-md',
         position === 'popper' && 'translate-y-1',
         className
       )}
@@ -69,7 +69,7 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      'relative flex w-full cursor-pointer select-none items-center rounded-md py-2 pl-8 pr-2 text-sm text-cafe-dark outline-none hover:bg-cafe-border/40 focus:bg-cafe-border/40 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      'relative flex w-full cursor-pointer select-none items-center rounded-md py-2 pl-8 pr-2 text-sm whitespace-normal break-words text-cafe-dark outline-none hover:bg-cafe-border/40 focus:bg-cafe-border/40 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       className
     )}
     {...props}
