@@ -32,6 +32,13 @@ type SortKey = 'name' | 'storage' | 'display' | 'total' | 'price_half_pound';
 type SortDir = 'asc' | 'desc';
 type FreshFilter = 'all' | 'resting' | 'normal' | 'expired' | 'low_stock';
 
+function SortIcon({ k, sortKey, sortDir }: { k: SortKey; sortKey: SortKey; sortDir: SortDir }) {
+  if (sortKey !== k) return <ChevronDown className="h-3.5 w-3.5 text-cafe-muted/40 inline ml-0.5" />;
+  return sortDir === 'asc'
+    ? <ChevronUp className="h-3.5 w-3.5 text-cafe-primary inline ml-0.5" />
+    : <ChevronDown className="h-3.5 w-3.5 text-cafe-primary inline ml-0.5" />;
+}
+
 const FRESH_TABS: { key: FreshFilter; label: string }[] = [
   { key: 'all', label: '全部' },
   { key: 'resting', label: '養豆中' },
@@ -115,12 +122,6 @@ export default function InventoryQueryPage() {
     else { setSortKey(key); setSortDir('asc'); }
   };
 
-  const SortIcon = ({ k }: { k: SortKey }) => {
-    if (sortKey !== k) return <ChevronDown className="h-3.5 w-3.5 text-cafe-muted/40 inline ml-0.5" />;
-    return sortDir === 'asc'
-      ? <ChevronUp className="h-3.5 w-3.5 text-cafe-primary inline ml-0.5" />
-      : <ChevronDown className="h-3.5 w-3.5 text-cafe-primary inline ml-0.5" />;
-  };
   const [freshFilter, setFreshFilter] = useState<FreshFilter>(initialFilter);
 
   const [beanDetailOpen, setBeanDetailOpen] = useState(false);
@@ -244,7 +245,74 @@ export default function InventoryQueryPage() {
           {freshFilter === 'all' ? '目前無庫存資料' : `沒有「${FRESH_TABS.find(t => t.key === freshFilter)?.label}」的批次`}
         </div>
       ) : (
-        <div className="bg-cafe-cream rounded-xl border border-cafe-border overflow-x-auto">
+        <>
+        <div className="md:hidden">
+          <div className="flex min-w-0 items-center gap-2 mb-3">
+            <label htmlFor="inventory-mobile-sort" className="text-sm text-cafe-dark shrink-0">排序</label>
+            <select
+              id="inventory-mobile-sort"
+              value={sortKey}
+              onChange={e => setSortKey(e.target.value as SortKey)}
+              className="min-w-0 flex-1 h-11 rounded-lg border border-cafe-border bg-cafe-cream px-2 text-sm text-cafe-dark focus:outline-none focus:ring-2 focus:ring-cafe-primary/50"
+            >
+              <option value="price_half_pound">半磅價格</option>
+              <option value="name">豆名</option>
+              <option value="storage">二樓倉庫</option>
+              <option value="display">展示櫃</option>
+              <option value="total">總數</option>
+            </select>
+            <Button
+              variant="outline"
+              onClick={() => setSortDir(d => d === 'asc' ? 'desc' : 'asc')}
+              aria-label={`目前${sortDir === 'asc' ? '升冪' : '降冪'}，切換排序方向`}
+              className="shrink-0 gap-1 px-2"
+            >
+              {sortDir === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              {sortDir === 'asc' ? '升冪' : '降冪'}
+            </Button>
+          </div>
+          <ul aria-label="豆子庫存" className="flex flex-col gap-3">
+            {sorted.map(({ bean, storage, display }) => {
+              const total = storage + display;
+              const isLow = total <= 2;
+              return (
+                <li key={bean.id} className="min-w-0 rounded-xl border border-cafe-border bg-cafe-cream p-3">
+                  <button
+                    className="min-h-[44px] w-full text-left font-medium text-cafe-dark hover:text-cafe-primary hover:underline [overflow-wrap:anywhere]"
+                    onClick={() => { setSelectedBean(bean); setBeanDetailOpen(true); }}
+                  >
+                    {bean.name}
+                  </button>
+                  <div className="grid grid-cols-3 gap-2 border-t border-cafe-border/50 pt-3 mt-2">
+                    {([
+                      { warehouse: 'storage', label: '二樓倉庫', quantity: storage },
+                      { warehouse: 'display', label: '展示櫃', quantity: display },
+                      { warehouse: 'total', label: '總數', quantity: total },
+                    ] as const).map(({ warehouse, label, quantity }) => (
+                      <div key={warehouse} className="min-w-0 text-center">
+                        <div className="text-xs text-cafe-muted">{label}</div>
+                        {quantity > 0 ? (
+                          <button
+                            className={`min-h-[44px] w-full text-lg font-semibold hover:underline ${isLow ? 'text-[#E7452A]' : 'text-cafe-dark'}`}
+                            aria-label={`${bean.name} ${label} ${quantity} 包，查看批次`}
+                            onClick={() => openBatchDetail(bean, warehouse)}
+                          >
+                            {quantity}
+                          </button>
+                        ) : (
+                          <div className={`min-h-[44px] flex items-center justify-center ${warehouse === 'total' ? 'text-lg font-bold text-[#E7452A]' : 'text-cafe-muted'}`}>
+                            {warehouse === 'total' ? 0 : '—'}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+        <div className="hidden md:block bg-cafe-cream rounded-xl border border-cafe-border overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-cafe-border">
@@ -252,25 +320,25 @@ export default function InventoryQueryPage() {
                   className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap"
                   onClick={() => toggleSort('name')}
                 >
-                  豆名<SortIcon k="name" />
+                  豆名<SortIcon k="name" sortKey={sortKey} sortDir={sortDir} />
                 </th>
                 <th
                   className="text-center px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark"
                   onClick={() => toggleSort('storage')}
                 >
-                  二樓倉庫<SortIcon k="storage" />
+                  二樓倉庫<SortIcon k="storage" sortKey={sortKey} sortDir={sortDir} />
                 </th>
                 <th
                   className="text-center px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark"
                   onClick={() => toggleSort('display')}
                 >
-                  展示櫃<SortIcon k="display" />
+                  展示櫃<SortIcon k="display" sortKey={sortKey} sortDir={sortDir} />
                 </th>
                 <th
                   className="text-center px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark"
                   onClick={() => toggleSort('total')}
                 >
-                  總數<SortIcon k="total" />
+                  總數<SortIcon k="total" sortKey={sortKey} sortDir={sortDir} />
                 </th>
               </tr>
             </thead>
@@ -335,6 +403,7 @@ export default function InventoryQueryPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       {/* Bean detail dialog */}
