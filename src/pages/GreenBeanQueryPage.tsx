@@ -27,6 +27,25 @@ interface GreenBatch {
 
 type StockFilter = 'all' | 'in_stock' | 'empty';
 
+type ColKey = 'code' | 'origin' | 'process' | 'supplier' | 'purchase_date' | 'quantity';
+
+const COL_OPTIONS: { key: ColKey; label: string }[] = [
+  { key: 'code',          label: '批次代號' },
+  { key: 'origin',        label: '產地' },
+  { key: 'process',       label: '處理法' },
+  { key: 'supplier',      label: '豆商' },
+  { key: 'purchase_date', label: '進貨日期' },
+  { key: 'quantity',      label: '進貨量 (kg)' },
+];
+
+const DEFAULT_COLS = new Set<ColKey>([]);
+
+const STOCK_OPTIONS: [StockFilter, string][] = [
+  ['in_stock', '有庫存'],
+  ['all', '全部'],
+  ['empty', '已用完'],
+];
+
 export default function GreenBeanQueryPage() {
   const navigate = useNavigate();
 
@@ -35,14 +54,16 @@ export default function GreenBeanQueryPage() {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(false);
 
-  // 篩選
+  // 套用中的篩選
   const [search, setSearch] = useState('');
   const [stockFilter, setStockFilter] = useState<StockFilter>('in_stock');
+  const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(DEFAULT_COLS);
 
   // 篩選視窗
   const [filterOpen, setFilterOpen] = useState(false);
   const [draftSearch, setDraftSearch] = useState('');
   const [draftStock, setDraftStock] = useState<StockFilter>('in_stock');
+  const [draftCols, setDraftCols] = useState<Set<ColKey>>(DEFAULT_COLS);
 
   useEffect(() => {
     Promise.all([
@@ -87,36 +108,42 @@ export default function GreenBeanQueryPage() {
     [rows]
   );
 
-  const activeFilterCount = (search ? 1 : 0) + (stockFilter !== 'in_stock' ? 1 : 0);
+  const activeFilterCount = (search ? 1 : 0) + (stockFilter !== 'in_stock' ? 1 : 0) + visibleCols.size;
 
   const openFilter = () => {
     setDraftSearch(search);
     setDraftStock(stockFilter);
+    setDraftCols(new Set(visibleCols));
     setFilterOpen(true);
   };
 
   const applyFilter = () => {
     setSearch(draftSearch);
     setStockFilter(draftStock);
+    setVisibleCols(new Set(draftCols));
     setFilterOpen(false);
   };
 
   const resetDraft = () => {
     setDraftSearch('');
     setDraftStock('in_stock');
+    setDraftCols(new Set(DEFAULT_COLS));
   };
 
   const resetAll = () => {
     setSearch('');
     setStockFilter('in_stock');
+    setVisibleCols(new Set(DEFAULT_COLS));
     setFilterOpen(false);
   };
 
-  const STOCK_OPTIONS: [StockFilter, string][] = [
-    ['in_stock', '有庫存'],
-    ['all', '全部'],
-    ['empty', '已用完'],
-  ];
+  const toggleDraftCol = (key: ColKey) => {
+    setDraftCols(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
 
   return (
     <div>
@@ -165,12 +192,12 @@ export default function GreenBeanQueryPage() {
             <thead>
               <tr className="border-b border-cafe-border">
                 <th className="text-left px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">豆名</th>
-                <th className="text-left px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">批次代號</th>
-                <th className="text-left px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">產地</th>
-                <th className="text-left px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">處理法</th>
-                <th className="text-left px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">豆商</th>
-                <th className="text-left px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">進貨日期</th>
-                <th className="text-right px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">進貨量 (kg)</th>
+                {visibleCols.has('code')          && <th className="text-left px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">批次代號</th>}
+                {visibleCols.has('origin')        && <th className="text-left px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">產地</th>}
+                {visibleCols.has('process')       && <th className="text-left px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">處理法</th>}
+                {visibleCols.has('supplier')      && <th className="text-left px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">豆商</th>}
+                {visibleCols.has('purchase_date') && <th className="text-left px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">進貨日期</th>}
+                {visibleCols.has('quantity')      && <th className="text-right px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">進貨量 (kg)</th>}
                 <th className="text-right px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">剩餘庫存 (kg)</th>
               </tr>
             </thead>
@@ -183,18 +210,12 @@ export default function GreenBeanQueryPage() {
                       {bean.name}
                       {bean.sub_name && <span className="ml-1 text-xs text-cafe-muted">({bean.sub_name})</span>}
                     </td>
-                    <td className="px-4 py-3 text-cafe-muted whitespace-nowrap">{batch.code || '—'}</td>
-                    <td className="px-4 py-3 text-cafe-muted whitespace-nowrap">
-                      {[bean.country, bean.region].filter(Boolean).join(' ') || '—'}
-                    </td>
-                    <td className="px-4 py-3 text-cafe-muted whitespace-nowrap">{bean.process_method || '—'}</td>
-                    <td className="px-4 py-3 text-cafe-muted whitespace-nowrap">{batch.supplier || '—'}</td>
-                    <td className="px-4 py-3 text-cafe-muted whitespace-nowrap">
-                      {batch.purchase_date ? batch.purchase_date.replace(/-/g, '/') : '—'}
-                    </td>
-                    <td className="px-4 py-3 text-right text-cafe-muted whitespace-nowrap">
-                      {batch.quantity != null ? batch.quantity.toFixed(2) : '—'}
-                    </td>
+                    {visibleCols.has('code')          && <td className="px-4 py-3 text-cafe-muted whitespace-nowrap">{batch.code || '—'}</td>}
+                    {visibleCols.has('origin')        && <td className="px-4 py-3 text-cafe-muted whitespace-nowrap">{[bean.country, bean.region].filter(Boolean).join(' ') || '—'}</td>}
+                    {visibleCols.has('process')       && <td className="px-4 py-3 text-cafe-muted whitespace-nowrap">{bean.process_method || '—'}</td>}
+                    {visibleCols.has('supplier')      && <td className="px-4 py-3 text-cafe-muted whitespace-nowrap">{batch.supplier || '—'}</td>}
+                    {visibleCols.has('purchase_date') && <td className="px-4 py-3 text-cafe-muted whitespace-nowrap">{batch.purchase_date ? batch.purchase_date.replace(/-/g, '/') : '—'}</td>}
+                    {visibleCols.has('quantity')      && <td className="px-4 py-3 text-right text-cafe-muted whitespace-nowrap">{batch.quantity != null ? batch.quantity.toFixed(2) : '—'}</td>}
                     <td className="px-4 py-3 text-right font-semibold whitespace-nowrap"
                       style={{ color: isEmpty ? '#8B7355' : '#04342C' }}>
                       {isEmpty ? '已用完' : batch.remaining.toFixed(2)}
@@ -210,12 +231,10 @@ export default function GreenBeanQueryPage() {
       {/* 篩選視窗 */}
       {filterOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-          {/* 背景遮罩 */}
           <div className="absolute inset-0 bg-black/40" onClick={() => setFilterOpen(false)} />
-
-          {/* 視窗 */}
           <div className="relative w-full sm:max-w-sm bg-cafe-cream rounded-t-2xl sm:rounded-2xl p-6 flex flex-col gap-5 shadow-xl">
-            {/* 視窗標題 */}
+
+            {/* 標題 */}
             <div className="flex items-center justify-between">
               <span className="text-base font-semibold text-cafe-dark">篩選條件</span>
               <button onClick={() => setFilterOpen(false)} className="text-cafe-muted hover:text-cafe-dark">
@@ -250,6 +269,23 @@ export default function GreenBeanQueryPage() {
               </div>
             </div>
 
+            {/* 顯示欄位 */}
+            <div>
+              <div className="text-sm font-medium text-cafe-dark mb-2">顯示欄位</div>
+              <div className="flex flex-wrap gap-2">
+                {COL_OPTIONS.map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => toggleDraftCol(key)}
+                    className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${draftCols.has(key) ? 'bg-cafe-primary text-cafe-cream border-cafe-primary' : 'border-cafe-border text-cafe-muted hover:bg-cafe-border/30'}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-cafe-muted mt-2">豆名、剩餘庫存固定顯示</p>
+            </div>
+
             {/* 按鈕列 */}
             <div className="flex gap-3 pt-1">
               <button
@@ -260,7 +296,7 @@ export default function GreenBeanQueryPage() {
                 重設
               </button>
               <Button onClick={applyFilter} className="flex-1">
-                套用篩選
+                套用
               </Button>
             </div>
           </div>
