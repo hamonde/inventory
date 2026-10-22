@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ArrowLeftRight, List, PlusCircle, AlertTriangle, Clock, CircleCheck, History, Coins, PackageOpen, BarChart2, ClipboardList, PackageX, ListChecks } from 'lucide-react';
+import { Search, ArrowLeftRight, List, PlusCircle, AlertTriangle, Clock, CircleCheck, History, Coins, PackageOpen, BarChart2, ClipboardList, PackageX, ListChecks, Sprout } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { calcFreshnessStats, calcLowStockCount } from '@/lib/inventory';
 import QuickSellDialog from '@/components/QuickSellDialog';
@@ -170,6 +170,7 @@ export default function HomePage() {
           { icon: BarChart2, label: '消耗報表', path: '/reports' },
           { icon: ClipboardList, label: '盤點', path: '/inventory-check' },
           { icon: ListChecks, label: '現貨目錄', path: '/menu' },
+          { icon: Sprout, label: '生豆庫存', path: '/green-beans' },
         ].map(({ icon: Icon, label, path }) => (
           <button
             key={path}
