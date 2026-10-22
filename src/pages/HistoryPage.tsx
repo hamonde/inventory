@@ -142,6 +142,7 @@ export default function HistoryPage() {
       let cmp = 0;
       if (sortCol === 'transaction_date') cmp = a.transaction_date.localeCompare(b.transaction_date);
       if (sortCol === 'qty_half_pound')   cmp = a.qty_half_pound - b.qty_half_pound;
+      if (cmp === 0) cmp = a.created_at.localeCompare(b.created_at);
       return sortDir === 'asc' ? cmp : -cmp;
     });
   }, [filtered, sortCol, sortDir]);

@@ -1,6 +1,7 @@
 import React, { createContext, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from './supabase';
+import { greenSupabase } from './greenSupabase';
 
 interface AuthContextValue {
   user: User | null;
@@ -32,11 +33,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const email = account.includes('@') ? account : `${account}@hamonde.local`;
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: '帳號或密碼錯誤' };
+    greenSupabase.auth.signInWithPassword({ email, password }).catch(() => {});
     return { error: null };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await Promise.all([supabase.auth.signOut(), greenSupabase.auth.signOut()]);
   };
 
   return (
