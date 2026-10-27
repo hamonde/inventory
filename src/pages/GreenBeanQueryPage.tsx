@@ -185,7 +185,53 @@ export default function GreenBeanQueryPage() {
       ) : rows.length === 0 ? (
         <div className="text-center text-cafe-muted py-12">沒有符合條件的紀錄</div>
       ) : (
-        <div className="bg-cafe-cream rounded-xl border border-cafe-border overflow-x-auto">
+        <>
+        {/* 手機：卡片 */}
+        <div className="md:hidden space-y-2.5">
+          {rows.map(({ batch, bean }) => {
+            const isEmpty = batch.remaining <= 0;
+            const details: [string, string][] = [];
+            if (visibleCols.has('code'))          details.push(['批次代號', batch.code || '—']);
+            if (visibleCols.has('origin'))        details.push(['產地', [bean.country, bean.region].filter(Boolean).join(' ') || '—']);
+            if (visibleCols.has('process'))       details.push(['處理法', bean.process_method || '—']);
+            if (visibleCols.has('supplier'))      details.push(['豆商', batch.supplier || '—']);
+            if (visibleCols.has('purchase_date')) details.push(['進貨日期', batch.purchase_date ? batch.purchase_date.replace(/-/g, '/') : '—']);
+            if (visibleCols.has('quantity'))      details.push(['進貨量', batch.quantity != null ? `${batch.quantity.toFixed(2)} kg` : '—']);
+            return (
+              <div key={batch.id} className={`bg-cafe-cream rounded-xl border border-cafe-border px-4 py-3 ${isEmpty ? 'opacity-50' : ''}`}>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-semibold text-cafe-dark leading-snug break-words">{bean.name}</div>
+                    {bean.sub_name && <div className="text-xs text-cafe-muted mt-0.5 break-words">{bean.sub_name}</div>}
+                  </div>
+                  <div className="shrink-0 text-right">
+                    {isEmpty ? (
+                      <span className="text-sm font-semibold" style={{ color: '#8B7355' }}>已用完</span>
+                    ) : (
+                      <>
+                        <span className="text-xl font-bold" style={{ color: '#04342C' }}>{batch.remaining.toFixed(2)}</span>
+                        <span className="text-xs text-cafe-muted ml-1">kg</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                {details.length > 0 && (
+                  <div className="mt-2.5 pt-2.5 border-t border-cafe-border/50 grid grid-cols-2 gap-x-3 gap-y-1.5 text-sm">
+                    {details.map(([label, value]) => (
+                      <div key={label} className="min-w-0">
+                        <div className="text-xs text-cafe-muted">{label}</div>
+                        <div className="text-cafe-dark break-words">{value}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 平板以上：表格 */}
+        <div className="hidden md:block bg-cafe-cream rounded-xl border border-cafe-border overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-cafe-border">
@@ -224,6 +270,7 @@ export default function GreenBeanQueryPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       {/* 篩選視窗 */}
