@@ -312,154 +312,279 @@ export default function BeansQueryPage() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Data */}
       {loading ? (
         <div className="text-center text-cafe-muted py-12">載入中...</div>
       ) : sorted.length === 0 ? (
         <div className="text-center text-cafe-muted py-12">沒有符合條件的豆子</div>
       ) : (
-        <div className="bg-cafe-cream rounded-xl border border-cafe-border overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-cafe-border">
-                <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('name')}>
-                  名稱<SortIcon k="name" />
-                </th>
-                <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('status')}>
-                  狀態<SortIcon k="status" />
-                </th>
-                {visibleCols.has('origins') && (
-                  <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('origins')}>
-                    產地<SortIcon k="origins" />
-                  </th>
+        <>
+          {/* Mobile: card list */}
+          <div className="block md:hidden space-y-3">
+            {sorted.map(bean => (
+              <div key={bean.id} className="bg-cafe-cream rounded-xl border border-cafe-border p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="font-semibold text-cafe-dark text-base leading-snug flex-1 min-w-0 pr-2">{bean.name}</div>
+                  <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full ${bean.status === 'selling' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {STATUS_LABEL[bean.status]}
+                  </span>
+                </div>
+
+                {/* Optional field rows */}
+                {(visibleCols.has('origins') || visibleCols.has('estate') || visibleCols.has('processing_plant') ||
+                  visibleCols.has('variety') || visibleCols.has('grade') || visibleCols.has('process') ||
+                  visibleCols.has('flavors') || visibleCols.has('price_drip') || visibleCols.has('price_half_pound') ||
+                  visibleCols.has('price_shopee_half_pound') || visibleCols.has('price_pour_over') || visibleCols.has('price_syphon')) && (
+                  <div className="space-y-1.5 text-sm mb-3">
+                    {visibleCols.has('origins') && (
+                      <div className="flex gap-2">
+                        <span className="text-cafe-muted w-20 shrink-0">產地</span>
+                        <span className="text-cafe-dark">{formatOrigins(bean.origins) || '—'}</span>
+                      </div>
+                    )}
+                    {visibleCols.has('estate') && (
+                      <div className="flex gap-2">
+                        <span className="text-cafe-muted w-20 shrink-0">莊園</span>
+                        <span className="text-cafe-dark">{bean.estate || '—'}</span>
+                      </div>
+                    )}
+                    {visibleCols.has('processing_plant') && (
+                      <div className="flex gap-2">
+                        <span className="text-cafe-muted w-20 shrink-0">處理廠</span>
+                        <span className="text-cafe-dark">{bean.processing_plant || '—'}</span>
+                      </div>
+                    )}
+                    {visibleCols.has('variety') && (
+                      <div className="flex gap-2">
+                        <span className="text-cafe-muted w-20 shrink-0">品種</span>
+                        <span className="text-cafe-dark">{bean.variety || '—'}</span>
+                      </div>
+                    )}
+                    {visibleCols.has('grade') && (
+                      <div className="flex gap-2">
+                        <span className="text-cafe-muted w-20 shrink-0">等級</span>
+                        <span className="text-cafe-dark">{bean.grade || '—'}</span>
+                      </div>
+                    )}
+                    {visibleCols.has('process') && (
+                      <div className="flex gap-2">
+                        <span className="text-cafe-muted w-20 shrink-0">處理法</span>
+                        <span className="text-cafe-dark">{bean.process_detail || PROCESS_LABEL[bean.process_category]}</span>
+                      </div>
+                    )}
+                    {visibleCols.has('flavors') && (
+                      <div className="flex gap-2">
+                        <span className="text-cafe-muted w-20 shrink-0">參考風味</span>
+                        <div className="flex flex-wrap gap-1">
+                          {(bean.flavors as string[]).map(f => (
+                            <span key={f} className="inline-block px-2 py-0.5 rounded-md border border-cafe-border bg-cafe-bg/30 text-cafe-dark text-xs">{f}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {(visibleCols.has('price_drip') || visibleCols.has('price_half_pound') ||
+                      visibleCols.has('price_shopee_half_pound') || visibleCols.has('price_pour_over') ||
+                      visibleCols.has('price_syphon')) && (
+                      <div className="mt-1 pt-1.5 border-t border-cafe-border/40 grid grid-cols-2 gap-x-3 gap-y-1">
+                        {visibleCols.has('price_drip') && (
+                          <div className="flex justify-between">
+                            <span className="text-cafe-muted">掛耳</span>
+                            <span className="text-cafe-dark font-medium">{bean.price_drip}</span>
+                          </div>
+                        )}
+                        {visibleCols.has('price_half_pound') && (
+                          <div className="flex justify-between">
+                            <span className="text-cafe-muted">半磅</span>
+                            <span className="text-cafe-dark font-medium">{bean.price_half_pound}</span>
+                          </div>
+                        )}
+                        {visibleCols.has('price_shopee_half_pound') && (
+                          <div className="flex justify-between">
+                            <span className="text-cafe-muted">蝦皮半磅</span>
+                            <span className="text-cafe-dark font-medium">{bean.price_shopee_half_pound ?? 0}</span>
+                          </div>
+                        )}
+                        {visibleCols.has('price_pour_over') && (
+                          <div className="flex justify-between">
+                            <span className="text-cafe-muted">手沖</span>
+                            <span className="text-cafe-dark font-medium">{bean.price_pour_over}</span>
+                          </div>
+                        )}
+                        {visibleCols.has('price_syphon') && (
+                          <div className="flex justify-between">
+                            <span className="text-cafe-muted">虹吸</span>
+                            <span className="text-cafe-dark font-medium">{bean.price_syphon}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
-                {visibleCols.has('estate') && (
-                  <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('estate')}>
-                    莊園<SortIcon k="estate" />
+
+                <div className="flex gap-2 pt-2 border-t border-cafe-border/50">
+                  <button
+                    onClick={() => navigate(`/beans/${bean.id}/edit`)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm text-cafe-primary border border-cafe-border hover:bg-cafe-bg/50"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    修改
+                  </button>
+                  <button
+                    onClick={() => setDeleteTarget(bean)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm text-red-500 border border-red-200 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    刪除
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: table */}
+          <div className="hidden md:block bg-cafe-cream rounded-xl border border-cafe-border overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-cafe-border">
+                  <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('name')}>
+                    名稱<SortIcon k="name" />
                   </th>
-                )}
-                {visibleCols.has('processing_plant') && (
-                  <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('processing_plant')}>
-                    處理廠<SortIcon k="processing_plant" />
+                  <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('status')}>
+                    狀態<SortIcon k="status" />
                   </th>
-                )}
-                {visibleCols.has('variety') && (
-                  <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('variety')}>
-                    品種<SortIcon k="variety" />
-                  </th>
-                )}
-                {visibleCols.has('grade') && (
-                  <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('grade')}>
-                    等級<SortIcon k="grade" />
-                  </th>
-                )}
-                {visibleCols.has('process') && (
-                  <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('process')}>
-                    處理法<SortIcon k="process" />
-                  </th>
-                )}
-                {visibleCols.has('flavors') && <th className="text-left px-4 py-3 text-cafe-muted font-medium">風味</th>}
-                {visibleCols.has('price_drip') && (
-                  <th className="text-right px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark" onClick={() => toggleSort('price_drip')}>
-                    掛耳<SortIcon k="price_drip" />
-                  </th>
-                )}
-                {visibleCols.has('price_half_pound') && (
-                  <th className="text-right px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark" onClick={() => toggleSort('price_half_pound')}>
-                    半磅<SortIcon k="price_half_pound" />
-                  </th>
-                )}
-                {visibleCols.has('price_shopee_half_pound') && (
-                  <th className="text-right px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark" onClick={() => toggleSort('price_shopee_half_pound')}>
-                    蝦皮半磅<SortIcon k="price_shopee_half_pound" />
-                  </th>
-                )}
-                {visibleCols.has('price_pour_over') && (
-                  <th className="text-right px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark" onClick={() => toggleSort('price_pour_over')}>
-                    手沖<SortIcon k="price_pour_over" />
-                  </th>
-                )}
-                {visibleCols.has('price_syphon') && (
-                  <th className="text-right px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark" onClick={() => toggleSort('price_syphon')}>
-                    虹吸<SortIcon k="price_syphon" />
-                  </th>
-                )}
-                <th className="text-center px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sorted.map((bean, i) => (
-                <tr key={bean.id} className={`border-b border-cafe-border/50 ${i % 2 === 1 ? 'bg-cafe-bg/10' : ''}`}>
-                  <td className="px-4 py-3 font-medium text-cafe-dark">{bean.name}</td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${bean.status === 'selling' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                      {STATUS_LABEL[bean.status]}
-                    </span>
-                  </td>
                   {visibleCols.has('origins') && (
-                    <td className="px-4 py-3 text-cafe-muted">
-                      {formatOrigins(bean.origins)}
-                    </td>
+                    <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('origins')}>
+                      產地<SortIcon k="origins" />
+                    </th>
                   )}
                   {visibleCols.has('estate') && (
-                    <td className="px-4 py-3 text-cafe-muted">{bean.estate || '—'}</td>
+                    <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('estate')}>
+                      莊園<SortIcon k="estate" />
+                    </th>
                   )}
                   {visibleCols.has('processing_plant') && (
-                    <td className="px-4 py-3 text-cafe-muted">{bean.processing_plant || '—'}</td>
+                    <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('processing_plant')}>
+                      處理廠<SortIcon k="processing_plant" />
+                    </th>
                   )}
                   {visibleCols.has('variety') && (
-                    <td className="px-4 py-3 text-cafe-muted">{bean.variety || '—'}</td>
+                    <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('variety')}>
+                      品種<SortIcon k="variety" />
+                    </th>
                   )}
                   {visibleCols.has('grade') && (
-                    <td className="px-4 py-3 text-cafe-muted">{bean.grade || '—'}</td>
+                    <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('grade')}>
+                      等級<SortIcon k="grade" />
+                    </th>
                   )}
                   {visibleCols.has('process') && (
-                    <td className="px-4 py-3 text-cafe-muted">
-                      {bean.process_detail || PROCESS_LABEL[bean.process_category]}
-                    </td>
+                    <th className="text-left px-4 py-3 text-cafe-muted font-medium cursor-pointer hover:text-cafe-dark whitespace-nowrap" onClick={() => toggleSort('process')}>
+                      處理法<SortIcon k="process" />
+                    </th>
                   )}
-                  {visibleCols.has('flavors') && (
+                  {visibleCols.has('flavors') && <th className="text-left px-4 py-3 text-cafe-muted font-medium">風味</th>}
+                  {visibleCols.has('price_drip') && (
+                    <th className="text-right px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark" onClick={() => toggleSort('price_drip')}>
+                      掛耳<SortIcon k="price_drip" />
+                    </th>
+                  )}
+                  {visibleCols.has('price_half_pound') && (
+                    <th className="text-right px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark" onClick={() => toggleSort('price_half_pound')}>
+                      半磅<SortIcon k="price_half_pound" />
+                    </th>
+                  )}
+                  {visibleCols.has('price_shopee_half_pound') && (
+                    <th className="text-right px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark" onClick={() => toggleSort('price_shopee_half_pound')}>
+                      蝦皮半磅<SortIcon k="price_shopee_half_pound" />
+                    </th>
+                  )}
+                  {visibleCols.has('price_pour_over') && (
+                    <th className="text-right px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark" onClick={() => toggleSort('price_pour_over')}>
+                      手沖<SortIcon k="price_pour_over" />
+                    </th>
+                  )}
+                  {visibleCols.has('price_syphon') && (
+                    <th className="text-right px-4 py-3 text-cafe-muted font-medium whitespace-nowrap cursor-pointer hover:text-cafe-dark" onClick={() => toggleSort('price_syphon')}>
+                      虹吸<SortIcon k="price_syphon" />
+                    </th>
+                  )}
+                  <th className="text-center px-4 py-3 text-cafe-muted font-medium whitespace-nowrap">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map((bean, i) => (
+                  <tr key={bean.id} className={`border-b border-cafe-border/50 ${i % 2 === 1 ? 'bg-cafe-bg/10' : ''}`}>
+                    <td className="px-4 py-3 font-medium text-cafe-dark">{bean.name}</td>
                     <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {(bean.flavors as string[]).map(f => (
-                          <span
-                            key={f}
-                            className="inline-block px-2 py-0.5 rounded-md border border-cafe-border bg-cafe-cream text-cafe-dark text-xs"
-                          >
-                            {f}
-                          </span>
-                        ))}
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${bean.status === 'selling' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                        {STATUS_LABEL[bean.status]}
+                      </span>
+                    </td>
+                    {visibleCols.has('origins') && (
+                      <td className="px-4 py-3 text-cafe-muted">
+                        {formatOrigins(bean.origins)}
+                      </td>
+                    )}
+                    {visibleCols.has('estate') && (
+                      <td className="px-4 py-3 text-cafe-muted">{bean.estate || '—'}</td>
+                    )}
+                    {visibleCols.has('processing_plant') && (
+                      <td className="px-4 py-3 text-cafe-muted">{bean.processing_plant || '—'}</td>
+                    )}
+                    {visibleCols.has('variety') && (
+                      <td className="px-4 py-3 text-cafe-muted">{bean.variety || '—'}</td>
+                    )}
+                    {visibleCols.has('grade') && (
+                      <td className="px-4 py-3 text-cafe-muted">{bean.grade || '—'}</td>
+                    )}
+                    {visibleCols.has('process') && (
+                      <td className="px-4 py-3 text-cafe-muted">
+                        {bean.process_detail || PROCESS_LABEL[bean.process_category]}
+                      </td>
+                    )}
+                    {visibleCols.has('flavors') && (
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          {(bean.flavors as string[]).map(f => (
+                            <span
+                              key={f}
+                              className="inline-block px-2 py-0.5 rounded-md border border-cafe-border bg-cafe-cream text-cafe-dark text-xs"
+                            >
+                              {f}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                    )}
+                    {visibleCols.has('price_drip') && <td className="px-4 py-3 text-right text-cafe-dark">{bean.price_drip}</td>}
+                    {visibleCols.has('price_half_pound') && <td className="px-4 py-3 text-right text-cafe-dark">{bean.price_half_pound}</td>}
+                    {visibleCols.has('price_shopee_half_pound') && <td className="px-4 py-3 text-right text-cafe-dark">{bean.price_shopee_half_pound ?? 0}</td>}
+                    {visibleCols.has('price_pour_over') && <td className="px-4 py-3 text-right text-cafe-dark">{bean.price_pour_over}</td>}
+                    {visibleCols.has('price_syphon') && <td className="px-4 py-3 text-right text-cafe-dark">{bean.price_syphon}</td>}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => navigate(`/beans/${bean.id}/edit`)}
+                          className="p-1.5 text-cafe-muted hover:text-cafe-primary rounded-lg hover:bg-cafe-bg/50"
+                          title="修改"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget(bean)}
+                          className="p-1.5 text-cafe-muted hover:text-red-500 rounded-lg hover:bg-red-50"
+                          title="刪除"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
                     </td>
-                  )}
-                  {visibleCols.has('price_drip') && <td className="px-4 py-3 text-right text-cafe-dark">{bean.price_drip}</td>}
-                  {visibleCols.has('price_half_pound') && <td className="px-4 py-3 text-right text-cafe-dark">{bean.price_half_pound}</td>}
-                  {visibleCols.has('price_shopee_half_pound') && <td className="px-4 py-3 text-right text-cafe-dark">{bean.price_shopee_half_pound ?? 0}</td>}
-                  {visibleCols.has('price_pour_over') && <td className="px-4 py-3 text-right text-cafe-dark">{bean.price_pour_over}</td>}
-                  {visibleCols.has('price_syphon') && <td className="px-4 py-3 text-right text-cafe-dark">{bean.price_syphon}</td>}
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => navigate(`/beans/${bean.id}/edit`)}
-                        className="p-1.5 text-cafe-muted hover:text-cafe-primary rounded-lg hover:bg-cafe-bg/50"
-                        title="修改"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget(bean)}
-                        className="p-1.5 text-cafe-muted hover:text-red-500 rounded-lg hover:bg-red-50"
-                        title="刪除"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* Delete confirm dialog */}
