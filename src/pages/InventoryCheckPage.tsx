@@ -182,6 +182,51 @@ export default function InventoryCheckPage() {
     setCancelConfirmOpen(false);
   };
 
+  const stepper = (r: CheckRow, idx: number, size: 'sm' | 'lg') => {
+    const btn = size === 'lg' ? 'w-11 h-11' : 'w-8 h-8';
+    const icon = size === 'lg' ? 'h-5 w-5' : 'h-3.5 w-3.5';
+    const cur = r.actualQty === '' ? r.systemQty : r.actualQty;
+    return (
+      <div className="flex items-center justify-center gap-1.5">
+        <button
+          onClick={() => setActual(idx, Math.max(0, cur - 1))}
+          className={`${btn} rounded-lg border border-cafe-border bg-cafe-cream flex items-center justify-center hover:bg-cafe-border/40 transition-colors shrink-0`}
+        >
+          <Minus className={`${icon} text-cafe-dark`} />
+        </button>
+        <Input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          value={r.actualQty === '' ? '' : r.actualQty}
+          placeholder={String(r.systemQty)}
+          onChange={e => {
+            const v = e.target.value;
+            setActual(idx, v === '' ? '' : Math.max(0, Number(v)));
+          }}
+          className={size === 'lg' ? 'w-16 h-11 text-center text-base px-1' : 'w-16 text-center text-sm px-1'}
+        />
+        <button
+          onClick={() => setActual(idx, cur + 1)}
+          className={`${btn} rounded-lg border border-cafe-border bg-cafe-cream flex items-center justify-center hover:bg-cafe-border/40 transition-colors shrink-0`}
+        >
+          <Plus className={`${icon} text-cafe-dark`} />
+        </button>
+      </div>
+    );
+  };
+
+  const diffLabel = (r: CheckRow & { diff: number }) =>
+    r.actualQty === '' ? (
+      <span className="text-cafe-muted/50">—</span>
+    ) : r.diff === 0 ? (
+      <span className="text-cafe-muted">—</span>
+    ) : r.diff > 0 ? (
+      <span className="text-green-600">+{r.diff}</span>
+    ) : (
+      <span className="text-red-500">{r.diff}</span>
+    );
+
   /* ════════════════════════════════════════════════════════
      RENDER
   ════════════════════════════════════════════════════════ */
@@ -270,8 +315,37 @@ export default function InventoryCheckPage() {
                 ⚠️ 盤點過程中若有其他人同時進行進出庫操作，可能導致差異不準，建議盤點時暫停其他操作。
               </div>
 
-              {/* 批次表格 */}
-              <div className="bg-cafe-cream rounded-xl border border-cafe-border overflow-hidden mb-4">
+              {/* 手機：批次卡片 */}
+              <div className="md:hidden space-y-2.5 mb-4">
+                {rowsWithDiff.map((r, idx) => (
+                  <div
+                    key={`${r.beanId}-${r.roastDate}`}
+                    className={`bg-cafe-cream rounded-xl border px-4 py-3 ${r.actualQty !== '' ? 'border-cafe-primary/40' : 'border-cafe-border'}`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-cafe-dark leading-snug break-words">{r.beanName}</div>
+                        <div className="text-xs text-cafe-muted mt-0.5">烘豆 {r.roastDate.replace(/-/g, '/')}</div>
+                      </div>
+                      <div className="shrink-0"><FreshBadge roastDate={r.roastDate} /></div>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                      <div className="text-center w-12 shrink-0">
+                        <div className="text-xs text-cafe-muted">系統</div>
+                        <div className="text-lg font-semibold text-cafe-dark">{r.systemQty}</div>
+                      </div>
+                      {stepper(r, idx, 'lg')}
+                      <div className="text-center w-12 shrink-0">
+                        <div className="text-xs text-cafe-muted">差異</div>
+                        <div className="text-lg font-semibold">{diffLabel(r)}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* 平板以上：批次表格 */}
+              <div className="hidden md:block bg-cafe-cream rounded-xl border border-cafe-border overflow-hidden mb-4">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -295,50 +369,8 @@ export default function InventoryCheckPage() {
                             <FreshBadge roastDate={r.roastDate} />
                           </td>
                           <td className="px-4 py-3 text-center text-cafe-dark">{r.systemQty}</td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <button
-                                onClick={() => {
-                                  const cur = r.actualQty === '' ? r.systemQty : r.actualQty as number;
-                                  setActual(idx, Math.max(0, cur - 1));
-                                }}
-                                className="w-8 h-8 rounded-lg border border-cafe-border bg-cafe-cream flex items-center justify-center hover:bg-cafe-border/40 transition-colors shrink-0"
-                              >
-                                <Minus className="h-3.5 w-3.5 text-cafe-dark" />
-                              </button>
-                              <Input
-                                type="number"
-                                min={0}
-                                value={r.actualQty === '' ? '' : r.actualQty}
-                                placeholder={String(r.systemQty)}
-                                onChange={e => {
-                                  const v = e.target.value;
-                                  setActual(idx, v === '' ? '' : Math.max(0, Number(v)));
-                                }}
-                                className="w-16 text-center text-sm px-1"
-                              />
-                              <button
-                                onClick={() => {
-                                  const cur = r.actualQty === '' ? r.systemQty : r.actualQty as number;
-                                  setActual(idx, cur + 1);
-                                }}
-                                className="w-8 h-8 rounded-lg border border-cafe-border bg-cafe-cream flex items-center justify-center hover:bg-cafe-border/40 transition-colors shrink-0"
-                              >
-                                <Plus className="h-3.5 w-3.5 text-cafe-dark" />
-                              </button>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-center font-semibold">
-                            {r.actualQty === '' ? (
-                              <span className="text-cafe-muted/50">—</span>
-                            ) : r.diff === 0 ? (
-                              <span className="text-cafe-muted">—</span>
-                            ) : r.diff > 0 ? (
-                              <span className="text-green-600">+{r.diff}</span>
-                            ) : (
-                              <span className="text-red-500">{r.diff}</span>
-                            )}
-                          </td>
+                          <td className="px-4 py-3">{stepper(r, idx, 'sm')}</td>
+                          <td className="px-4 py-3 text-center font-semibold">{diffLabel(r)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -351,10 +383,11 @@ export default function InventoryCheckPage() {
                 <Button
                   variant="outline"
                   onClick={() => setCancelConfirmOpen(true)}
+                  className="flex-1 md:flex-none"
                 >
                   取消盤點
                 </Button>
-                <Button onClick={() => setConfirmOpen(true)}>
+                <Button onClick={() => setConfirmOpen(true)} className="flex-1 md:flex-none">
                   送出盤點調整
                 </Button>
               </div>
