@@ -183,7 +183,7 @@ export default function InventoryCheckPage() {
   };
 
   const stepper = (r: CheckRow, idx: number, size: 'sm' | 'lg') => {
-    const btn = size === 'lg' ? 'w-11 h-11' : 'w-8 h-8';
+    const btn = size === 'lg' ? 'w-10 h-10' : 'w-8 h-8';
     const icon = size === 'lg' ? 'h-5 w-5' : 'h-3.5 w-3.5';
     const cur = r.actualQty === '' ? r.systemQty : r.actualQty;
     return (
@@ -204,7 +204,7 @@ export default function InventoryCheckPage() {
             const v = e.target.value;
             setActual(idx, v === '' ? '' : Math.max(0, Number(v)));
           }}
-          className={size === 'lg' ? 'w-16 h-11 text-center text-base px-1' : 'w-16 text-center text-sm px-1'}
+          className={size === 'lg' ? 'w-14 h-10 text-center text-base px-1' : 'w-16 text-center text-sm px-1'}
         />
         <button
           onClick={() => setActual(idx, cur + 1)}
@@ -329,16 +329,18 @@ export default function InventoryCheckPage() {
                       </div>
                       <div className="shrink-0"><FreshBadge roastDate={r.roastDate} /></div>
                     </div>
-                    <div className="mt-3 flex items-center justify-between gap-2">
-                      <div className="text-center w-12 shrink-0">
-                        <div className="text-xs text-cafe-muted">系統</div>
-                        <div className="text-lg font-semibold text-cafe-dark">{r.systemQty}</div>
+                    <div className="mt-3 flex items-center justify-between gap-3">
+                      <div className="flex gap-4 shrink-0">
+                        <div className="text-center">
+                          <div className="text-xs text-cafe-muted">系統</div>
+                          <div className="text-lg font-semibold text-cafe-dark">{r.systemQty}</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-cafe-muted">差異</div>
+                          <div className="text-lg font-semibold">{diffLabel(r)}</div>
+                        </div>
                       </div>
                       {stepper(r, idx, 'lg')}
-                      <div className="text-center w-12 shrink-0">
-                        <div className="text-xs text-cafe-muted">差異</div>
-                        <div className="text-lg font-semibold">{diffLabel(r)}</div>
-                      </div>
                     </div>
                   </div>
                 ))}
