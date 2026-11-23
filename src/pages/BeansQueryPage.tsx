@@ -87,12 +87,34 @@ export default function BeansQueryPage() {
 
   useEffect(() => { load(); }, []);
 
+  /* 搜尋：比對豆名、產地、莊園、處理廠、品種、等級、處理法、風味 */
+  const keyword = search.trim().toLowerCase();
+  const matchesSearch = (b: Bean) => {
+    if (!keyword) return true;
+    const fields = [
+      b.name,
+      ...(b.origins ?? []).flatMap(o => [o.country, o.region ?? '']),
+      b.estate ?? '',
+      b.processing_plant ?? '',
+      b.variety ?? '',
+      b.grade ?? '',
+      b.process_detail ?? '',
+      PROCESS_LABEL[b.process_category] ?? '',
+      ...(b.flavors ?? []),
+    ];
+    return fields.some(f => f && f.toLowerCase().includes(keyword));
+  };
+
   const filtered = beans.filter(b => {
     if (statusFilter !== 'all' && b.status !== statusFilter) return false;
     if (processFilter !== 'all' && b.process_category !== processFilter) return false;
-    if (search && !b.name.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
+    return matchesSearch(b);
   });
+
+  /* 關鍵字有符合、但被「銷售狀態／處理法」篩掉的筆數，用來提示使用者 */
+  const hiddenByFilter = keyword && filtered.length === 0
+    ? beans.filter(matchesSearch).length
+    : 0;
 
   /* 排序 */
   const sorted = [...filtered].sort((a, b) => {
@@ -267,7 +289,7 @@ export default function BeansQueryPage() {
             {searchOpen && (
               <div className="relative w-48">
                 <Input
-                  placeholder="輸入豆名關鍵字"
+                  placeholder="豆名、產地、風味…"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   autoFocus
@@ -282,7 +304,7 @@ export default function BeansQueryPage() {
             <button
               onClick={() => { setSearchOpen(v => !v); if (searchOpen) setSearch(''); }}
               className="p-2 text-cafe-muted hover:text-cafe-dark border border-cafe-border rounded-lg min-h-[36px] min-w-[36px] flex items-center justify-center"
-              title="搜尋豆名"
+              title="搜尋"
             >
               <Search className="h-5 w-5" />
             </button>
@@ -316,7 +338,19 @@ export default function BeansQueryPage() {
       {loading ? (
         <div className="text-center text-cafe-muted py-12">載入中...</div>
       ) : sorted.length === 0 ? (
-        <div className="text-center text-cafe-muted py-12">沒有符合條件的豆子</div>
+        <div className="text-center text-cafe-muted py-12">
+          沒有符合條件的豆子
+          {hiddenByFilter > 0 && (
+            <div className="mt-3 text-sm">
+              有 {hiddenByFilter} 筆符合「{search.trim()}」，但被目前的銷售狀態／處理法篩選隱藏了
+              <div className="mt-2">
+                <Button size="sm" variant="outline" onClick={() => { setStatusFilter('all'); setProcessFilter('all'); }}>
+                  顯示全部狀態
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       ) : (
         <>
           {/* Mobile: card list */}
