@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X, Pencil, Trash2, ChevronLeft, Download, ChevronUp, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
@@ -54,6 +54,8 @@ export default function BeansQueryPage() {
   const [loading, setLoading] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | BeanStatus>('selling');
   const [processFilter, setProcessFilter] = useState<'all' | ProcessCategory>('all');
   const [visibleCols, setVisibleCols] = useState<Set<OptColKey>>(new Set(['origins', 'process', 'flavors', 'price_half_pound', 'price_pour_over']));
@@ -146,6 +148,13 @@ export default function BeansQueryPage() {
       default: return 0;
     }
   });
+
+  /* 送出搜尋：收起手機鍵盤並捲到結果區；關鍵字為空時則收起搜尋框 */
+  const submitSearch = () => {
+    if (!keyword) { setSearch(''); setSearchOpen(false); return; }
+    searchInputRef.current?.blur();
+    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const toggleCol = (k: OptColKey) => {
     setVisibleCols(prev => {
@@ -284,31 +293,49 @@ export default function BeansQueryPage() {
             </div>
           </div>
 
-          {/* 搜尋圖示（右上對齊第一排按鈕底部） */}
-          <div className="flex items-center gap-2 mt-[22px]">
-            {searchOpen && (
-              <div className="relative w-48">
-                <Input
-                  placeholder="豆名、產地、風味…"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  autoFocus
-                />
-                {search && (
-                  <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-cafe-muted">
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
+          {/* 搜尋：打字即時篩選；按 🔍 或鍵盤「搜尋」鍵 → 收起鍵盤並捲到結果（不會清空關鍵字） */}
+          <form
+            className="flex flex-col items-end gap-1 mt-[22px]"
+            onSubmit={e => { e.preventDefault(); submitSearch(); }}
+          >
+            <div className="flex items-center gap-2">
+              {searchOpen && (
+                <div className="relative w-48">
+                  <Input
+                    ref={searchInputRef}
+                    type="search"
+                    enterKeyHint="search"
+                    placeholder="豆名、產地、風味…"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="pr-8 [&::-webkit-search-cancel-button]:hidden"
+                    autoFocus
+                  />
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => { setSearch(''); searchInputRef.current?.focus(); }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-cafe-muted"
+                      title="清除"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => (searchOpen ? submitSearch() : setSearchOpen(true))}
+                className="p-2 text-cafe-muted hover:text-cafe-dark border border-cafe-border rounded-lg min-h-[36px] min-w-[36px] flex items-center justify-center"
+                title="搜尋"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+            </div>
+            {searchOpen && keyword && !loading && (
+              <div className="text-xs text-cafe-muted">找到 {sorted.length} 筆</div>
             )}
-            <button
-              onClick={() => { setSearchOpen(v => !v); if (searchOpen) setSearch(''); }}
-              className="p-2 text-cafe-muted hover:text-cafe-dark border border-cafe-border rounded-lg min-h-[36px] min-w-[36px] flex items-center justify-center"
-              title="搜尋"
-            >
-              <Search className="h-5 w-5" />
-            </button>
-          </div>
+          </form>
         </div>
 
         {/* 顯示欄位 */}
@@ -335,6 +362,7 @@ export default function BeansQueryPage() {
       </div>
 
       {/* Data */}
+      <div ref={resultsRef} className="scroll-mt-4" />
       {loading ? (
         <div className="text-center text-cafe-muted py-12">載入中...</div>
       ) : sorted.length === 0 ? (
